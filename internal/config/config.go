@@ -3,14 +3,15 @@ package config
 import (
 	"log"
 	"os"
-	"time"
+	"strconv"
 
 	"github.com/joho/godotenv"
 )
 
 type Config struct {
 	// Server
-	Port string
+	Port        string
+	Environment string
 
 	// Database
 	DBHost     string
@@ -22,7 +23,7 @@ type Config struct {
 
 	// JWT
 	JWTSecret     string
-	JWTExpiryHour time.Duration
+	JWTExpiration int
 
 	// Email (Mailpit)
 	SMTPHost     string
@@ -41,12 +42,15 @@ func New() *Config {
 		log.Println("No .env file found, using environment variables")
 	}
 
+	jwtExp, _ := strconv.Atoi(getEnv("JWT_EXPIRATION", "24"))
+
 	return &Config{
 		// Server
-		Port: getEnv("PORT", "8080"),
+		Port:        getEnv("PORT", "8080"),
+		Environment: getEnv("ENVIRONMENT", "development"),
 
 		// Database
-		DBHost:     getEnv("DB_HOST", "localhost"),
+		DBHost:     getEnv("DB_HOST", "postgres"),
 		DBPort:     getEnv("DB_PORT", "5432"),
 		DBUser:     getEnv("DB_USER", "postgres"),
 		DBPassword: getEnv("DB_PASSWORD", "postgres"),
@@ -54,8 +58,8 @@ func New() *Config {
 		DBSSLMode:  getEnv("DB_SSLMODE", "disable"),
 
 		// JWT
-		JWTSecret:     getEnv("JWT_SECRET", "your-super-secret-key-change-this"),
-		JWTExpiryHour: time.Hour * 24,
+		JWTSecret:     getEnv("JWT_SECRET", "secret"),
+		JWTExpiration: jwtExp,
 
 		// Email
 		SMTPHost:     getEnv("SMTP_HOST", "localhost"),
