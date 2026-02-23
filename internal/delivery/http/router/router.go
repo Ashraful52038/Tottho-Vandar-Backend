@@ -9,23 +9,29 @@ import (
 )
 
 type Router struct {
-	authHandler *handler.AuthHandler
-	userHandler *handler.UserHandler
-	postHandler *handler.PostHandler
-	jwtService  *jwt.JWTService
+	authHandler    *handler.AuthHandler
+	userHandler    *handler.UserHandler
+	postHandler    *handler.PostHandler
+	commentHandler *handler.CommentHandler
+	likeHandler    *handler.LikeHandler
+	jwtService     *jwt.JWTService
 }
 
 func NewRouter(
 	authHandler *handler.AuthHandler,
 	userHandler *handler.UserHandler,
 	postHandler *handler.PostHandler,
+	commentHandler *handler.CommentHandler,
+	likeHandler *handler.LikeHandler,
 	jwtService *jwt.JWTService,
 ) *Router {
 	return &Router{
-		authHandler: authHandler,
-		userHandler: userHandler,
-		postHandler: postHandler,
-		jwtService:  jwtService,
+		authHandler:    authHandler,
+		userHandler:    userHandler,
+		postHandler:    postHandler,
+		commentHandler: commentHandler,
+		likeHandler:    likeHandler,
+		jwtService:     jwtService,
 	}
 }
 
@@ -48,6 +54,17 @@ func (r *Router) SetupRoutes(e *echo.Echo) {
 			auth.POST("/reset-password", r.authHandler.ResetPassword)
 		}
 
+		// Public post routes
+		api.GET("/posts", r.postHandler.GetAllPosts)
+		api.GET("/posts/:id", r.postHandler.GetPostByID)
+
+		// PUBLIC comment routes
+		api.GET("/comments/posts/:postId", r.commentHandler.GetByPost)
+
+		// PUBLIC like routes
+		api.GET("/likes/posts/:postId", r.likeHandler.GetPostLikes)
+		api.GET("/likes/comments/:commentId", r.likeHandler.GetCommentLikes)
+
 		// Protected routes
 		protected := api.Group("")
 		protected.Use(middleware.AuthMiddlewareFunc(r.jwtService))
@@ -60,7 +77,7 @@ func (r *Router) SetupRoutes(e *echo.Echo) {
 				user.POST("/logout", r.userHandler.Logout)
 			}
 
-			// Post routes
+			// Post routes (protected)
 			post := protected.Group("/posts")
 			{
 				post.POST("", r.postHandler.CreatePost)
@@ -68,10 +85,21 @@ func (r *Router) SetupRoutes(e *echo.Echo) {
 				post.DELETE("/:id", r.postHandler.DeletePost)
 				post.GET("/my-posts", r.postHandler.GetMyPosts)
 			}
-		}
 
-		// Public post routes
-		api.GET("/posts", r.postHandler.GetAllPosts)
-		api.GET("/posts/:id", r.postHandler.GetPostByID)
+			// Comment routes
+			comment := protected.Group("/comments")
+			{
+				comment.POST("/posts/:postId", r.commentHandler.Create)
+				comment.PUT("/:id", r.commentHandler.Update)
+				comment.DELETE("/:id", r.commentHandler.Delete)
+			}
+
+			// Like routes
+			like := protected.Group("/likes")
+			{
+				like.POST("/posts/:postId", r.likeHandler.TogglePost)
+				like.POST("/comments/:commentId", r.likeHandler.ToggleComment)
+			}
+		}
 	}
 }

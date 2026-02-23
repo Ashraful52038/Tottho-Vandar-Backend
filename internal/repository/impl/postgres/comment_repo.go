@@ -23,7 +23,7 @@ func (r *commentRepository) Create(ctx context.Context, comment *domain.Comment)
 
 func (r *commentRepository) FindByID(ctx context.Context, id uint) (*domain.Comment, error) {
 	var comment domain.Comment
-	err := r.db.WithContext(ctx).Preload("Author").First(&comment, id).Error
+	err := r.db.WithContext(ctx).Preload("User").First(&comment, id).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -34,7 +34,7 @@ func (r *commentRepository) FindByPostID(ctx context.Context, postID uint) ([]do
 	var comments []domain.Comment
 	err := r.db.WithContext(ctx).
 		Where("post_id = ?", postID).
-		Preload("Author").
+		Preload("User").
 		Order("created_at asc").
 		Find(&comments).Error
 	return comments, err

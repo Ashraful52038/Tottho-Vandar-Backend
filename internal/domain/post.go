@@ -24,7 +24,7 @@ type Tag struct {
 	CreatedAt time.Time `json:"createdAt"`
 }
 
-// CreatePostRequest - পোস্ট তৈরি করার জন্য রিকোয়েস্ট
+// CreatePostRequest
 type CreatePostRequest struct {
 	Title     string   `json:"title" validate:"required"`
 	Content   string   `json:"content" validate:"required"`
@@ -32,7 +32,7 @@ type CreatePostRequest struct {
 	Published bool     `json:"published"`
 }
 
-// UpdatePostRequest - পোস্ট আপডেট করার জন্য রিকোয়েস্ট
+// UpdatePostRequest
 type UpdatePostRequest struct {
 	Title     *string  `json:"title,omitempty"`
 	Content   *string  `json:"content,omitempty"`
