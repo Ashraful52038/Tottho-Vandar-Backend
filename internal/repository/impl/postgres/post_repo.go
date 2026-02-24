@@ -3,8 +3,10 @@ package postgres
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/Ashraful52038/tottho-vandar-backend/internal/domain"
+	"github.com/Ashraful52038/tottho-vandar-backend/internal/repository"
 	"gorm.io/gorm"
 )
 
@@ -126,6 +128,65 @@ func (r *postRepository) SearchByTags(ctx context.Context, tagIDs []uint, page, 
 		Offset(offset).
 		Limit(limit).
 		Order("posts.created_at DESC").
+		Find(&posts).Error
+
+	return posts, total, err
+}
+
+// ✅ SearchPosts - সার্চ ও ফিল্টার ফাংশন
+func (r *postRepository) SearchPosts(ctx context.Context, params *repository.SearchParams) ([]domain.Post, int64, error) {
+	var posts []domain.Post
+	var total int64
+
+	// Base query with preloads
+	query := r.db.WithContext(ctx).
+		Model(&domain.Post{}).
+		Preload("Author").
+		Preload("Tags").
+		Where("published = ?", true)
+
+	// 🔍 Keyword search (title or content)
+	if params.Query != "" {
+		searchTerm := "%" + strings.ToLower(params.Query) + "%"
+		query = query.Where(
+			"LOWER(title) LIKE ? OR LOWER(content) LIKE ?",
+			searchTerm, searchTerm,
+		)
+	}
+
+	// 🏷️ Filter by tags
+	if len(params.TagIDs) > 0 {
+		subQuery := r.db.Table("post_tags").
+			Select("post_id").
+			Where("tag_id IN ?", params.TagIDs).
+			Group("post_id").
+			Having("COUNT(DISTINCT tag_id) = ?", len(params.TagIDs))
+
+		query = query.Where("id IN (?)", subQuery)
+	}
+
+	// 👤 Filter by author
+	if params.AuthorID != nil {
+		query = query.Where("author_id = ?", *params.AuthorID)
+	}
+
+	// 📊 Pagination
+	offset := (params.Page - 1) * params.Limit
+	if offset < 0 {
+		offset = 0
+	}
+
+	// Count total
+	err := query.Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Get paginated results
+	err = query.
+		Offset(offset).
+		Limit(params.Limit).
+		Order("created_at DESC").
 		Find(&posts).Error
 
 	return posts, total, err

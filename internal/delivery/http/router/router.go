@@ -59,6 +59,7 @@ func (r *Router) SetupRoutes(e *echo.Echo) {
 
 		// Public post routes
 		api.GET("/posts", r.postHandler.GetAllPosts)
+		api.GET("/posts/search", r.postHandler.SearchPosts)
 		api.GET("/posts/:id", r.postHandler.GetPostByID)
 
 		// ✅ Public tag routes

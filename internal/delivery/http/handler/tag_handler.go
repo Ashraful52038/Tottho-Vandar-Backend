@@ -22,12 +22,12 @@ func NewTagHandler(tagUsecase usecase.TagUsecase) *TagHandler {
 // CreateTag handler - নতুন ট্যাগ তৈরি (Admin only)
 func (h *TagHandler) CreateTag(c echo.Context) error {
 	// Optional: Check if user is admin
-	// userRole, ok := c.Get("userRole").(string)
-	// if !ok || userRole != "admin" {
-	//     return c.JSON(http.StatusForbidden, map[string]interface{}{
-	//         "error": "admin access required",
-	//     })
-	// }
+	userRole, ok := c.Get("userRole").(string)
+	if !ok || userRole != "admin" {
+		return c.JSON(http.StatusForbidden, map[string]interface{}{
+			"error": "admin access required",
+		})
+	}
 
 	var req domain.CreateTagRequest
 	if err := c.Bind(&req); err != nil {
@@ -118,7 +118,6 @@ func (h *TagHandler) GetAllTags(c echo.Context) error {
 	})
 }
 
-// GetPopularTags handler - জনপ্রিয় ট্যাগ
 func (h *TagHandler) GetPopularTags(c echo.Context) error {
 	limit, _ := strconv.Atoi(c.QueryParam("limit"))
 	if limit < 1 {
@@ -135,7 +134,6 @@ func (h *TagHandler) GetPopularTags(c echo.Context) error {
 	return c.JSON(http.StatusOK, tags)
 }
 
-// GetTagsByPostID handler - নির্দিষ্ট পোস্টের ট্যাগ
 func (h *TagHandler) GetTagsByPostID(c echo.Context) error {
 	postID, err := strconv.ParseUint(c.Param("postId"), 10, 32)
 	if err != nil {
@@ -154,7 +152,6 @@ func (h *TagHandler) GetTagsByPostID(c echo.Context) error {
 	return c.JSON(http.StatusOK, tags)
 }
 
-// UpdateTag handler - ট্যাগ আপডেট (Admin only)
 func (h *TagHandler) UpdateTag(c echo.Context) error {
 	// Optional: Check if user is admin
 	userRole, ok := c.Get("userRole").(string)
@@ -195,15 +192,14 @@ func (h *TagHandler) UpdateTag(c echo.Context) error {
 	return c.JSON(http.StatusOK, tag)
 }
 
-// DeleteTag handler - ট্যাগ ডিলিট (Admin only)
 func (h *TagHandler) DeleteTag(c echo.Context) error {
 	// Optional: Check if user is admin
-	// userRole, ok := c.Get("userRole").(string)
-	// if !ok || userRole != "admin" {
-	//     return c.JSON(http.StatusForbidden, map[string]interface{}{
-	//         "error": "admin access required",
-	//     })
-	// }
+	userRole, ok := c.Get("userRole").(string)
+	if !ok || userRole != "admin" {
+		return c.JSON(http.StatusForbidden, map[string]interface{}{
+			"error": "admin access required",
+		})
+	}
 
 	tagID, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {

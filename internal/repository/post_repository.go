@@ -15,4 +15,13 @@ type PostRepository interface {
 	Delete(ctx context.Context, id uint) error
 	FindByTagID(ctx context.Context, tagID uint, page, limit int) ([]domain.Post, int64, error)
 	SearchByTags(ctx context.Context, tagIDs []uint, page, limit int) ([]domain.Post, int64, error)
+	SearchPosts(ctx context.Context, params *SearchParams) ([]domain.Post, int64, error)
+}
+
+type SearchParams struct {
+	Query    string `json:"q"`        // keyword search
+	TagIDs   []uint `json:"tagIds"`   // filter by tags
+	AuthorID *uint  `json:"authorId"` // filter by author
+	Page     int    `json:"page"`
+	Limit    int    `json:"limit"`
 }

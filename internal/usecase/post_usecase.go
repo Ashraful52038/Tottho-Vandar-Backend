@@ -18,6 +18,7 @@ type PostUsecase interface {
 	GetByUserID(ctx context.Context, userID uint) ([]domain.Post, error)
 	GetByTagID(ctx context.Context, tagID uint, page, limit int) ([]domain.Post, int64, error)
 	GetByTags(ctx context.Context, tagIDs []uint, page, limit int) ([]domain.Post, int64, error)
+	SearchPosts(ctx context.Context, params *repository.SearchParams) ([]domain.Post, int64, error)
 }
 
 type postUsecase struct {
@@ -38,7 +39,6 @@ func NewPostUsecase(
 	}
 }
 
-// ✅ পরিবর্তন ১: Create মেথড - TagIDs সরাসরি ব্যবহার
 func (u *postUsecase) Create(ctx context.Context, userID uint, req *domain.CreatePostRequest) (*domain.Post, error) {
 	// Check if user exists
 	user, err := u.userRepo.FindByID(ctx, userID)
@@ -46,12 +46,11 @@ func (u *postUsecase) Create(ctx context.Context, userID uint, req *domain.Creat
 		return nil, errors.New("user not found")
 	}
 
-	// Check if user is verified
-	if !user.Verified {
-		return nil, errors.New("email not verified")
-	}
+	// // Check if user is verified
+	// if !user.Verified {
+	// 	return nil, errors.New("email not verified")
+	// }
 
-	// ✅ TagIDs সরাসরি ব্যবহার করুন (কনভার্সনের দরকার নেই)
 	tagIDs := req.TagIDs
 
 	// Validate at least one tag
@@ -91,7 +90,6 @@ func (u *postUsecase) Create(ctx context.Context, userID uint, req *domain.Creat
 	return post, nil
 }
 
-// ✅ পরিবর্তন ২: Update মেথড - TagIDs সরাসরি ব্যবহার
 func (u *postUsecase) Update(ctx context.Context, postID uint, userID uint, req *domain.UpdatePostRequest) (*domain.Post, error) {
 	post, err := u.postRepo.FindByID(ctx, postID)
 	if err != nil || post == nil {
@@ -120,7 +118,7 @@ func (u *postUsecase) Update(ctx context.Context, postID uint, userID uint, req 
 	}
 
 	// Update tags if provided
-	if req.TagIDs != nil { // ✅ TagIDs ব্যবহার
+	if req.TagIDs != nil {
 		tagIDs := req.TagIDs
 
 		// Validate tags exist
@@ -141,7 +139,6 @@ func (u *postUsecase) Update(ctx context.Context, postID uint, userID uint, req 
 	return post, nil
 }
 
-// ✅ পরিবর্তন ৩: Delete মেথড - nil check যোগ
 func (u *postUsecase) Delete(ctx context.Context, postID uint, userID uint) error {
 	post, err := u.postRepo.FindByID(ctx, postID)
 	if err != nil || post == nil {
@@ -155,7 +152,6 @@ func (u *postUsecase) Delete(ctx context.Context, postID uint, userID uint) erro
 	return u.postRepo.Delete(ctx, postID)
 }
 
-// ✅ পরিবর্তন ৪: GetByID - nil check যোগ
 func (u *postUsecase) GetByID(ctx context.Context, id uint) (*domain.Post, error) {
 	post, err := u.postRepo.FindByID(ctx, id)
 	if err != nil || post == nil {
@@ -164,7 +160,6 @@ func (u *postUsecase) GetByID(ctx context.Context, id uint) (*domain.Post, error
 	return post, nil
 }
 
-// ✅ পরিবর্তন ৫: GetAll - pagination validation
 func (u *postUsecase) GetAll(ctx context.Context, page, limit int) ([]domain.Post, int64, error) {
 	if page < 1 {
 		page = 1
@@ -175,7 +170,6 @@ func (u *postUsecase) GetAll(ctx context.Context, page, limit int) ([]domain.Pos
 	return u.postRepo.FindAll(ctx, page, limit)
 }
 
-// ✅ পরিবর্তন ৬: GetByUserID - user validation
 func (u *postUsecase) GetByUserID(ctx context.Context, userID uint) ([]domain.Post, error) {
 	user, err := u.userRepo.FindByID(ctx, userID)
 	if err != nil || user == nil {
@@ -184,7 +178,6 @@ func (u *postUsecase) GetByUserID(ctx context.Context, userID uint) ([]domain.Po
 	return u.postRepo.FindByUserID(ctx, userID)
 }
 
-// GetByTagID - নির্দিষ্ট ট্যাগের পোস্ট লিস্ট
 func (u *postUsecase) GetByTagID(ctx context.Context, tagID uint, page, limit int) ([]domain.Post, int64, error) {
 	// Check if tag exists
 	tag, err := u.tagRepo.FindByID(ctx, tagID)
@@ -202,7 +195,6 @@ func (u *postUsecase) GetByTagID(ctx context.Context, tagID uint, page, limit in
 	return u.postRepo.FindByTagID(ctx, tagID, page, limit)
 }
 
-// GetByTags - একাধিক ট্যাগের পোস্ট লিস্ট
 func (u *postUsecase) GetByTags(ctx context.Context, tagIDs []uint, page, limit int) ([]domain.Post, int64, error) {
 	// Validate tags
 	for _, tagID := range tagIDs {
@@ -220,4 +212,35 @@ func (u *postUsecase) GetByTags(ctx context.Context, tagIDs []uint, page, limit 
 	}
 
 	return u.postRepo.SearchByTags(ctx, tagIDs, page, limit)
+}
+
+// ✅ SearchPosts implementation
+func (u *postUsecase) SearchPosts(ctx context.Context, params *repository.SearchParams) ([]domain.Post, int64, error) {
+	// Validate pagination
+	if params.Page < 1 {
+		params.Page = 1
+	}
+	if params.Limit < 1 || params.Limit > 100 {
+		params.Limit = 20
+	}
+
+	// Validate tags if provided
+	if len(params.TagIDs) > 0 {
+		for _, tagID := range params.TagIDs {
+			tag, err := u.tagRepo.FindByID(ctx, tagID)
+			if err != nil || tag == nil {
+				return nil, 0, fmt.Errorf("invalid tag id: %d", tagID)
+			}
+		}
+	}
+
+	// Validate author if provided
+	if params.AuthorID != nil {
+		user, err := u.userRepo.FindByID(ctx, *params.AuthorID)
+		if err != nil || user == nil {
+			return nil, 0, errors.New("author not found")
+		}
+	}
+
+	return u.postRepo.SearchPosts(ctx, params)
 }
