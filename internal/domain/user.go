@@ -48,3 +48,28 @@ type UpdateUserRequest struct {
 	Avatar *string `json:"avatar,omitempty"`
 	Bio    *string `json:"bio,omitempty"`
 }
+
+// UserResponse - response struct for user (excludes sensitive data)
+type UserResponse struct {
+	ID        uint      `json:"id"`
+	Name      string    `json:"name"`
+	Email     string    `json:"email"`
+	Verified  bool      `json:"verified"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+// ToResponse - converts User to UserResponse (hides password)
+func (u *User) ToResponse() *UserResponse {
+	if u == nil {
+		return nil
+	}
+	return &UserResponse{
+		ID:        u.ID,
+		Name:      u.Name,
+		Email:     u.Email,
+		Verified:  u.Verified,
+		CreatedAt: u.CreatedAt,
+		UpdatedAt: u.UpdatedAt,
+	}
+}

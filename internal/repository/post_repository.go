@@ -13,4 +13,6 @@ type PostRepository interface {
 	FindByUserID(ctx context.Context, userID uint) ([]domain.Post, error)
 	Update(ctx context.Context, post *domain.Post) error
 	Delete(ctx context.Context, id uint) error
+	FindByTagID(ctx context.Context, tagID uint, page, limit int) ([]domain.Post, int64, error)
+	SearchByTags(ctx context.Context, tagIDs []uint, page, limit int) ([]domain.Post, int64, error)
 }

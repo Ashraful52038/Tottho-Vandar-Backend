@@ -14,6 +14,7 @@ type Router struct {
 	postHandler    *handler.PostHandler
 	commentHandler *handler.CommentHandler
 	likeHandler    *handler.LikeHandler
+	tagHandler     *handler.TagHandler
 	jwtService     *jwt.JWTService
 }
 
@@ -23,6 +24,7 @@ func NewRouter(
 	postHandler *handler.PostHandler,
 	commentHandler *handler.CommentHandler,
 	likeHandler *handler.LikeHandler,
+	tagHandler *handler.TagHandler,
 	jwtService *jwt.JWTService,
 ) *Router {
 	return &Router{
@@ -31,6 +33,7 @@ func NewRouter(
 		postHandler:    postHandler,
 		commentHandler: commentHandler,
 		likeHandler:    likeHandler,
+		tagHandler:     tagHandler,
 		jwtService:     jwtService,
 	}
 }
@@ -58,6 +61,11 @@ func (r *Router) SetupRoutes(e *echo.Echo) {
 		api.GET("/posts", r.postHandler.GetAllPosts)
 		api.GET("/posts/:id", r.postHandler.GetPostByID)
 
+		// ✅ Public tag routes
+		api.GET("/tags", r.tagHandler.GetAllTags)
+		api.GET("/tags/popular", r.tagHandler.GetPopularTags)
+		api.GET("/tags/:id", r.tagHandler.GetTagByID)
+
 		// PUBLIC comment routes
 		api.GET("/comments/posts/:postId", r.commentHandler.GetByPost)
 
@@ -84,6 +92,14 @@ func (r *Router) SetupRoutes(e *echo.Echo) {
 				post.PUT("/:id", r.postHandler.UpdatePost)
 				post.DELETE("/:id", r.postHandler.DeletePost)
 				post.GET("/my-posts", r.postHandler.GetMyPosts)
+			}
+
+			// ✅ Protected tag routes
+			tag := protected.Group("/tags")
+			{
+				tag.POST("", r.tagHandler.CreateTag)
+				tag.PUT("/:id", r.tagHandler.UpdateTag)
+				tag.DELETE("/:id", r.tagHandler.DeleteTag)
 			}
 
 			// Comment routes

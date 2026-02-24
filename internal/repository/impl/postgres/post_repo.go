@@ -66,3 +66,67 @@ func (r *postRepository) Update(ctx context.Context, post *domain.Post) error {
 func (r *postRepository) Delete(ctx context.Context, id uint) error {
 	return r.db.WithContext(ctx).Delete(&domain.Post{}, id).Error
 }
+
+func (r *postRepository) FindByTagID(ctx context.Context, tagID uint, page, limit int) ([]domain.Post, int64, error) {
+	var posts []domain.Post
+	var total int64
+
+	offset := (page - 1) * limit
+
+	// Count total
+	err := r.db.WithContext(ctx).
+		Model(&domain.Post{}).
+		Joins("JOIN post_tags ON post_tags.post_id = posts.id").
+		Where("post_tags.tag_id = ?", tagID).
+		Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Get paginated posts
+	err = r.db.WithContext(ctx).
+		Preload("Author").
+		Preload("Tags").
+		Joins("JOIN post_tags ON post_tags.post_id = posts.id").
+		Where("post_tags.tag_id = ?", tagID).
+		Offset(offset).
+		Limit(limit).
+		Order("posts.created_at DESC").
+		Find(&posts).Error
+
+	return posts, total, err
+}
+
+func (r *postRepository) SearchByTags(ctx context.Context, tagIDs []uint, page, limit int) ([]domain.Post, int64, error) {
+	var posts []domain.Post
+	var total int64
+
+	offset := (page - 1) * limit
+
+	// Count total
+	err := r.db.WithContext(ctx).
+		Model(&domain.Post{}).
+		Joins("JOIN post_tags ON post_tags.post_id = posts.id").
+		Where("post_tags.tag_id IN ?", tagIDs).
+		Group("posts.id").
+		Having("COUNT(DISTINCT post_tags.tag_id) = ?", len(tagIDs)).
+		Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Get paginated posts
+	err = r.db.WithContext(ctx).
+		Preload("Author").
+		Preload("Tags").
+		Joins("JOIN post_tags ON post_tags.post_id = posts.id").
+		Where("post_tags.tag_id IN ?", tagIDs).
+		Group("posts.id").
+		Having("COUNT(DISTINCT post_tags.tag_id) = ?", len(tagIDs)).
+		Offset(offset).
+		Limit(limit).
+		Order("posts.created_at DESC").
+		Find(&posts).Error
+
+	return posts, total, err
+}

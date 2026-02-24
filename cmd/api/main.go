@@ -30,6 +30,7 @@ func main() {
 	postRepo := postgres.NewPostRepository(db)
 	commentRepo := postgres.NewCommentRepository(db)
 	likeRepo := postgres.NewLikeRepository(db)
+	tagRepo := postgres.NewTagRepository(db)
 
 	// Initialize services
 	jwtService := jwt.NewJWTService(cfg.JWTSecret, time.Hour*24)
@@ -50,9 +51,10 @@ func main() {
 
 	// Initialize usecases
 	userUsecase := usecase.NewUserUsecase(userRepo)
-	postUsecase := usecase.NewPostUsecase(postRepo, userRepo)
+	postUsecase := usecase.NewPostUsecase(postRepo, userRepo, tagRepo)
 	commentUsecase := usecase.NewCommentUsecase(commentRepo, postRepo, userRepo)
 	likeUsecase := usecase.NewLikeUsecase(likeRepo, postRepo, commentRepo, userRepo)
+	tagUsecase := usecase.NewTagUsecase(tagRepo, postRepo)
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(authUsecase)
@@ -60,6 +62,7 @@ func main() {
 	postHandler := handler.NewPostHandler(postUsecase)
 	commentHandler := handler.NewCommentHandler(commentUsecase)
 	likeHandler := handler.NewLikeHandler(likeUsecase)
+	tagHandler := handler.NewTagHandler(tagUsecase)
 
 	// Initialize Echo
 	e := echo.New()
@@ -74,6 +77,7 @@ func main() {
 		postHandler,
 		commentHandler,
 		likeHandler,
+		tagHandler,
 		jwtService,
 	)
 	router.SetupRoutes(e)
