@@ -19,23 +19,31 @@ type PostUsecase interface {
 	GetByTagID(ctx context.Context, tagID uint, page, limit int) ([]domain.Post, int64, error)
 	GetByTags(ctx context.Context, tagIDs []uint, page, limit int) ([]domain.Post, int64, error)
 	SearchPosts(ctx context.Context, params *repository.SearchParams) ([]domain.Post, int64, error)
+	GetPersonalizedFeed(ctx context.Context, userID uint, params *domain.FeedQueryParams) (*domain.FeedResponse, error)
+	GetPublicFeed(ctx context.Context, params *domain.FeedQueryParams) (*domain.FeedResponse, error)
+	FollowTag(ctx context.Context, userID, tagID uint) error
+	UnfollowTag(ctx context.Context, userID, tagID uint) error
+	GetFollowedTags(ctx context.Context, userID uint) ([]domain.Tag, error)
 }
 
 type postUsecase struct {
 	postRepo repository.PostRepository
 	userRepo repository.UserRepository
 	tagRepo  repository.TagRepository
+	feedRepo repository.FeedRepository
 }
 
 func NewPostUsecase(
 	postRepo repository.PostRepository,
 	userRepo repository.UserRepository,
 	tagRepo repository.TagRepository,
+	feedRepo repository.FeedRepository,
 ) PostUsecase {
 	return &postUsecase{
 		postRepo: postRepo,
 		userRepo: userRepo,
 		tagRepo:  tagRepo,
+		feedRepo: feedRepo,
 	}
 }
 
@@ -243,4 +251,104 @@ func (u *postUsecase) SearchPosts(ctx context.Context, params *repository.Search
 	}
 
 	return u.postRepo.SearchPosts(ctx, params)
+}
+
+// GetPersonalizedFeed - পার্সোনালাইজড ফিড
+func (u *postUsecase) GetPersonalizedFeed(ctx context.Context, userID uint, params *domain.FeedQueryParams) (*domain.FeedResponse, error) {
+	// ডিফল্ট ভ্যালু সেট
+	if params.Page < 1 {
+		params.Page = 1
+	}
+	if params.Limit < 1 {
+		params.Limit = 20
+	}
+	if params.SortBy == "" {
+		params.SortBy = "created_at"
+	}
+	if params.SortOrder == "" {
+		params.SortOrder = "desc"
+	}
+
+	posts, total, err := u.postRepo.GetPersonalizedFeed(ctx, userID, params)
+	if err != nil {
+		return nil, err
+	}
+
+	totalPages := (int(total) + params.Limit - 1) / params.Limit
+
+	response := &domain.FeedResponse{
+		Posts:      posts,
+		Total:      total,
+		Page:       params.Page,
+		Limit:      params.Limit,
+		TotalPages: totalPages,
+	}
+	return response, nil
+}
+
+// GetPublicFeed - পাবলিক ফিড
+func (u *postUsecase) GetPublicFeed(ctx context.Context, params *domain.FeedQueryParams) (*domain.FeedResponse, error) {
+	// ডিফল্ট ভ্যালু সেট
+	if params.Page < 1 {
+		params.Page = 1
+	}
+	if params.Limit < 1 {
+		params.Limit = 20
+	}
+	if params.SortBy == "" {
+		params.SortBy = "created_at"
+	}
+	if params.SortOrder == "" {
+		params.SortOrder = "desc"
+	}
+
+	posts, total, err := u.postRepo.GetPublicFeed(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+
+	totalPages := (int(total) + params.Limit - 1) / params.Limit
+
+	response := &domain.FeedResponse{
+		Posts:      posts,
+		Total:      total,
+		Page:       params.Page,
+		Limit:      params.Limit,
+		TotalPages: totalPages,
+	}
+
+	return response, nil
+}
+
+// FollowTag - ট্যাগ ফলো
+func (u *postUsecase) FollowTag(ctx context.Context, userID, tagID uint) error {
+	// ট্যাগ এক্সিস্ট করে কিনা চেক
+	tag, err := u.tagRepo.FindByID(ctx, tagID)
+	if err != nil {
+		return err
+	}
+	if tag == nil {
+		return fmt.Errorf("tag not found with id: %d", tagID)
+	}
+
+	return u.feedRepo.ToggleFollowTag(ctx, userID, tagID)
+}
+
+// UnfollowTag - ট্যাগ আনফলো
+func (u *postUsecase) UnfollowTag(ctx context.Context, userID, tagID uint) error {
+	// ট্যাগ এক্সিস্ট করে কিনা চেক (optional)
+	tag, err := u.tagRepo.FindByID(ctx, tagID)
+	if err != nil {
+		return err
+	}
+	if tag == nil {
+		return fmt.Errorf("tag not found with id: %d", tagID)
+	}
+
+	return u.feedRepo.ToggleFollowTag(ctx, userID, tagID)
+}
+
+// GetFollowedTags - ইউজারের ফলো করা ট্যাগ লিস্ট
+func (u *postUsecase) GetFollowedTags(ctx context.Context, userID uint) ([]domain.Tag, error) {
+	return u.feedRepo.GetFollowedTags(ctx, userID)
 }

@@ -2,20 +2,23 @@ package domain
 
 import (
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type Post struct {
-	ID        uint      `json:"id" gorm:"primaryKey"`
-	Title     string    `json:"title" gorm:"not null"`
-	Content   string    `json:"content" gorm:"type:text;not null"`
-	AuthorID  uint      `json:"authorId" gorm:"not null"`
-	Author    User      `json:"author,omitempty" gorm:"foreignKey:AuthorID"`
-	Tags      []Tag     `json:"tags" gorm:"many2many:post_tags;constraint:OnDelete:CASCADE;"`
-	Likes     int       `json:"likes" gorm:"default:0"`
-	Comments  int       `json:"comments" gorm:"default:0"`
-	Published bool      `json:"published" gorm:"default:false"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	ID        uint           `json:"id" gorm:"primaryKey"`
+	Title     string         `json:"title" gorm:"not null"`
+	Content   string         `json:"content" gorm:"type:text;not null"`
+	AuthorID  uint           `json:"authorId" gorm:"not null"`
+	Author    User           `json:"author,omitempty" gorm:"foreignKey:AuthorID"`
+	Tags      []Tag          `json:"tags" gorm:"many2many:post_tags;constraint:OnDelete:CASCADE;"`
+	Likes     int            `json:"likes" gorm:"default:0"`
+	Comments  int            `json:"comments" gorm:"default:0"`
+	Published bool           `json:"published" gorm:"default:false"`
+	CreatedAt time.Time      `json:"createdAt"`
+	UpdatedAt time.Time      `json:"updatedAt"`
+	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
 // TagID type for type safety

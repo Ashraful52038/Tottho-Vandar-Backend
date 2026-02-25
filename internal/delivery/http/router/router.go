@@ -14,6 +14,7 @@ type Router struct {
 	postHandler    *handler.PostHandler
 	commentHandler *handler.CommentHandler
 	likeHandler    *handler.LikeHandler
+	feedHandler    *handler.FeedHandler
 	tagHandler     *handler.TagHandler
 	jwtService     *jwt.JWTService
 }
@@ -25,6 +26,7 @@ func NewRouter(
 	commentHandler *handler.CommentHandler,
 	likeHandler *handler.LikeHandler,
 	tagHandler *handler.TagHandler,
+	feedHandler *handler.FeedHandler,
 	jwtService *jwt.JWTService,
 ) *Router {
 	return &Router{
@@ -34,6 +36,7 @@ func NewRouter(
 		commentHandler: commentHandler,
 		likeHandler:    likeHandler,
 		tagHandler:     tagHandler,
+		feedHandler:    feedHandler,
 		jwtService:     jwtService,
 	}
 }
@@ -56,6 +59,9 @@ func (r *Router) SetupRoutes(e *echo.Echo) {
 			auth.POST("/forgot-password", r.authHandler.ForgotPassword)
 			auth.POST("/reset-password", r.authHandler.ResetPassword)
 		}
+
+		// ✅ Public Feed Route
+		api.GET("/feed/public", r.feedHandler.GetPublicFeed)
 
 		// Public post routes
 		api.GET("/posts", r.postHandler.GetAllPosts)
@@ -116,6 +122,15 @@ func (r *Router) SetupRoutes(e *echo.Echo) {
 			{
 				like.POST("/posts/:postId", r.likeHandler.TogglePost)
 				like.POST("/comments/:commentId", r.likeHandler.ToggleComment)
+			}
+
+			// ✅ Feed Routes (Protected)
+			feed := protected.Group("/feed")
+			{
+				feed.GET("", r.feedHandler.GetPersonalizedFeed)            // GET /api/feed
+				feed.GET("/tags/followed", r.feedHandler.GetFollowedTags)  // GET /api/feed/tags/followed
+				feed.POST("/tags/:id/follow", r.feedHandler.FollowTag)     // POST /api/feed/tags/1/follow
+				feed.POST("/tags/:id/unfollow", r.feedHandler.UnfollowTag) // POST /api/feed/tags/1/unfollow
 			}
 		}
 	}
