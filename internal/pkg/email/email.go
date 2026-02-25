@@ -36,6 +36,23 @@ func (s *EmailService) SendResetPasswordEmail(to, token string) error {
 	return s.sendEmail(to, subject, body)
 }
 
+func (s *EmailService) SendReplyNotification(to, username, commenter, content string, postID uint) error {
+	subject := fmt.Sprintf("%s replied to your comment", commenter)
+	body := fmt.Sprintf(`
+Hello %s,
+
+%s replied to your comment:
+"%s"
+
+View the conversation: http://localhost:3000/posts/%d
+
+---
+You're receiving this because you have notifications enabled.
+`, username, commenter, content, postID)
+
+	return s.sendEmail(to, subject, body)
+}
+
 func (s *EmailService) sendEmail(to, subject, body string) error {
 	// SMTP connection
 	// auth := smtp.PlainAuth("", s.username, s.password, s.host)

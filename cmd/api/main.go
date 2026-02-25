@@ -44,16 +44,14 @@ func main() {
 		cfg.EmailFrom,    // "noreply@totthovandar.com"
 	)
 
-	authUsecase := usecase.NewAuthUsecase(
-		userRepo,
-		jwtService,
-		emailService,
-	)
+	var emailQueue *email.EmailQueueService = nil
+	// emailQueue, _ = email.NewEmailQueueService(emailService, "amqp://guest:guest@localhost:5672/")
 
 	// Initialize usecases
+	authUsecase := usecase.NewAuthUsecase(userRepo, jwtService, emailService)
 	userUsecase := usecase.NewUserUsecase(userRepo)
 	postUsecase := usecase.NewPostUsecase(postRepo, userRepo, tagRepo, feedRepo)
-	commentUsecase := usecase.NewCommentUsecase(commentRepo, postRepo, userRepo)
+	commentUsecase := usecase.NewCommentUsecase(commentRepo, postRepo, userRepo, emailQueue)
 	likeUsecase := usecase.NewLikeUsecase(likeRepo, postRepo, commentRepo, userRepo)
 	tagUsecase := usecase.NewTagUsecase(tagRepo, postRepo)
 

@@ -3,8 +3,10 @@ package usecase
 import (
 	"context"
 	"errors"
+	"log"
 
 	"github.com/Ashraful52038/tottho-vandar-backend/internal/domain"
+	"github.com/Ashraful52038/tottho-vandar-backend/internal/pkg/email"
 	"github.com/Ashraful52038/tottho-vandar-backend/internal/repository"
 )
 
@@ -19,17 +21,20 @@ type commentUsecase struct {
 	commentRepo repository.CommentRepository
 	postRepo    repository.PostRepository
 	userRepo    repository.UserRepository
+	emailQueue  *email.EmailQueueService
 }
 
 func NewCommentUsecase(
 	commentRepo repository.CommentRepository,
 	postRepo repository.PostRepository,
 	userRepo repository.UserRepository,
+	emailQueue *email.EmailQueueService,
 ) CommentUsecase {
 	return &commentUsecase{
 		commentRepo: commentRepo,
 		postRepo:    postRepo,
 		userRepo:    userRepo,
+		emailQueue:  emailQueue,
 	}
 }
 
@@ -54,7 +59,53 @@ func (u *commentUsecase) Create(ctx context.Context, userID uint, postID uint, c
 	}
 
 	err = u.commentRepo.Create(ctx, comment)
+
+	if err == nil && u.emailQueue != nil {
+		go u.sendReplyNotification(ctx, post, user, content)
+	}
+
 	return comment, err
+}
+
+func (u *commentUsecase) sendReplyNotification(ctx context.Context, post *domain.Post, commenter *domain.User, content string) {
+	// পোস্টের লেখককে notification পাঠাবেন (নিজের পোস্টে comment করলে না)
+	if post.AuthorID == commenter.ID {
+		log.Printf("User commented on own post, skipping notification")
+		return
+	}
+
+	// পোস্টের লেখকের তথ্য নিন
+	postAuthor, err := u.userRepo.FindByID(ctx, post.AuthorID)
+	if err != nil || postAuthor == nil {
+		log.Printf("Failed to find post author: %v", err)
+		return
+	}
+
+	// notification preference চেক করুন (future use)
+	// if !postAuthor.NotificationsEnabled {
+	//     return
+	// }
+
+	log.Printf("Sending reply notification to %s about comment from %s", postAuthor.Email, commenter.Name)
+
+	// EmailQueueService এর মাধ্যমে notification পাঠান
+	if u.emailQueue != nil {
+		msg := email.EmailMessage{
+			Type:      "reply",
+			To:        postAuthor.Email,
+			Username:  postAuthor.Name,
+			Commenter: commenter.Name,
+			Content:   content,
+			PostID:    post.ID,
+		}
+		if err := u.emailQueue.PublishEmail(msg); err != nil {
+			log.Printf("Failed to publish email notification: %v", err)
+		} else {
+			log.Printf("Reply notification queued successfully")
+		}
+	} else {
+		log.Printf("Email queue not initialized, skipping notification")
+	}
 }
 
 func (u *commentUsecase) GetByPostID(ctx context.Context, postID uint) ([]domain.Comment, error) {
