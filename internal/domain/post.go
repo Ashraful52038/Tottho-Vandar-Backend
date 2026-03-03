@@ -24,31 +24,39 @@ type Post struct {
 // TagID type for type safety
 type TagID uint
 
-// CreatePostRequest - cleaner version with explicit types
+// CreatePostRequest
 type CreatePostRequest struct {
-	Title     string `json:"title" validate:"required,min=3,max=200"`
-	Content   string `json:"content" validate:"required,min=10"`
-	TagIDs    []uint `json:"tagIds" binding:"required,min=1"` // Explicit []uint instead of interface{}
-	Published bool   `json:"published"`
+	Title     string   `json:"title" validate:"required,min=3,max=200"`
+	Content   string   `json:"content" validate:"required,min=10"`
+	TagIDs    []uint   `json:"tagIds,omitempty"` // Explicit []uint instead of interface{}
+	TagNames  []string `json:"tagNames" binding:"required,min=1"`
+	Published bool     `json:"published"`
 }
 
-// UpdatePostRequest - cleaner version with explicit types
+// UpdatePostRequest
 type UpdatePostRequest struct {
-	Title     *string `json:"title,omitempty" validate:"omitempty,min=3,max=200"`
-	Content   *string `json:"content,omitempty" validate:"omitempty,min=10"`
-	TagIDs    []uint  `json:"tagIds,omitempty"` // Explicit []uint instead of interface{}
-	Published *bool   `json:"published,omitempty"`
+	Title     *string  `json:"title,omitempty" validate:"omitempty,min=3,max=200"`
+	Content   *string  `json:"content,omitempty" validate:"omitempty,min=10"`
+	TagIDs    []uint   `json:"tagIds,omitempty"` // Explicit []uint instead of interface{}
+	TagNames  []string `json:"tagNames,omitempty"`
+	Published *bool    `json:"published,omitempty"`
 }
 
 // ToResponse - converts Post to response format
 func (p *Post) ToResponse() *PostResponse {
+	// Prepare author response if author exists
+	var authorResponse *UserResponse
+	if p.Author.ID != 0 {
+		authorResponse = p.Author.ToResponse()
+	}
+
 	return &PostResponse{
 		ID:        p.ID,
 		Title:     p.Title,
 		Content:   p.Content,
 		AuthorID:  p.AuthorID,
-		Author:    p.Author.ToResponse(),
-		Tags:      p.Tags,
+		Author:    authorResponse, // ✅ ঠিক করা হলো
+		Tags:      p.Tags,         // ✅ tags যোগ করা হলো
 		Likes:     p.Likes,
 		Comments:  p.Comments,
 		Published: p.Published,

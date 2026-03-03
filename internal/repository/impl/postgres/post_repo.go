@@ -25,7 +25,7 @@ func (r *postRepository) Create(ctx context.Context, post *domain.Post) error {
 
 func (r *postRepository) FindByID(ctx context.Context, id uint) (*domain.Post, error) {
 	var post domain.Post
-	err := r.db.WithContext(ctx).Preload("Author").First(&post, id).Error
+	err := r.db.WithContext(ctx).Preload("Author").Preload("Tags").First(&post, id).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
