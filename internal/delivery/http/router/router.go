@@ -17,6 +17,7 @@ type Router struct {
 	feedHandler    *handler.FeedHandler
 	tagHandler     *handler.TagHandler
 	jwtService     *jwt.JWTService
+	uploadHandler  *handler.UploadHandler
 }
 
 func NewRouter(
@@ -28,6 +29,7 @@ func NewRouter(
 	tagHandler *handler.TagHandler,
 	feedHandler *handler.FeedHandler,
 	jwtService *jwt.JWTService,
+	uploadHandler *handler.UploadHandler,
 ) *Router {
 	return &Router{
 		authHandler:    authHandler,
@@ -38,6 +40,7 @@ func NewRouter(
 		tagHandler:     tagHandler,
 		feedHandler:    feedHandler,
 		jwtService:     jwtService,
+		uploadHandler:  uploadHandler,
 	}
 }
 
@@ -101,7 +104,7 @@ func (r *Router) SetupRoutes(e *echo.Echo) {
 				post.GET("/my-posts", r.postHandler.GetMyPosts)
 			}
 
-			// ✅ Protected tag routes
+			// Protected tag routes
 			tag := protected.Group("/tags")
 			{
 				tag.POST("", r.tagHandler.CreateTag)
@@ -124,13 +127,19 @@ func (r *Router) SetupRoutes(e *echo.Echo) {
 				like.POST("/comments/:commentId", r.likeHandler.ToggleComment)
 			}
 
-			// ✅ Feed Routes (Protected)
+			//Feed Routes (Protected)
 			feed := protected.Group("/feed")
 			{
 				feed.GET("", r.feedHandler.GetPersonalizedFeed)            // GET /api/feed
 				feed.GET("/tags/followed", r.feedHandler.GetFollowedTags)  // GET /api/feed/tags/followed
 				feed.POST("/tags/:id/follow", r.feedHandler.FollowTag)     // POST /api/feed/tags/1/follow
 				feed.POST("/tags/:id/unfollow", r.feedHandler.UnfollowTag) // POST /api/feed/tags/1/unfollow
+			}
+
+			// Upload routes
+			upload := protected.Group("/upload")
+			{
+				upload.POST("/image", r.uploadHandler.UploadImage)
 			}
 		}
 	}

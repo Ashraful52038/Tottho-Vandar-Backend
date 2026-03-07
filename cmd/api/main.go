@@ -63,6 +63,7 @@ func main() {
 	likeHandler := handler.NewLikeHandler(likeUsecase)
 	tagHandler := handler.NewTagHandler(tagUsecase)
 	feedHandler := handler.NewFeedHandler(postUsecase)
+	uploadHandler := handler.NewUploadHandler()
 
 	// Initialize Echo
 	e := echo.New()
@@ -80,6 +81,7 @@ func main() {
 		tagHandler,
 		feedHandler,
 		jwtService,
+		uploadHandler,
 	)
 	router.SetupRoutes(e)
 
