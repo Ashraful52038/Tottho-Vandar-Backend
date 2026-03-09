@@ -60,7 +60,7 @@ func main() {
 	userHandler := handler.NewUserHandler(userUsecase)
 	postHandler := handler.NewPostHandler(postUsecase)
 	commentHandler := handler.NewCommentHandler(commentUsecase)
-	likeHandler := handler.NewLikeHandler(likeUsecase)
+	likeHandler := handler.NewLikeHandler(likeUsecase, postUsecase)
 	tagHandler := handler.NewTagHandler(tagUsecase)
 	feedHandler := handler.NewFeedHandler(postUsecase)
 	uploadHandler := handler.NewUploadHandler()

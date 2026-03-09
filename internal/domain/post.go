@@ -55,13 +55,14 @@ func (p *Post) ToResponse() *PostResponse {
 		Title:     p.Title,
 		Content:   p.Content,
 		AuthorID:  p.AuthorID,
-		Author:    authorResponse, // ✅ ঠিক করা হলো
-		Tags:      p.Tags,         // ✅ tags যোগ করা হলো
+		Author:    authorResponse,
+		Tags:      p.Tags,
 		Likes:     p.Likes,
 		Comments:  p.Comments,
 		Published: p.Published,
 		CreatedAt: p.CreatedAt,
 		UpdatedAt: p.UpdatedAt,
+		IsLiked:   false,
 	}
 }
 
@@ -78,6 +79,7 @@ type PostResponse struct {
 	Published bool          `json:"published"`
 	CreatedAt time.Time     `json:"createdAt"`
 	UpdatedAt time.Time     `json:"updatedAt"`
+	IsLiked   bool          `json:"isLiked"`
 }
 
 // PostListResponse - paginated post list response

@@ -41,38 +41,106 @@ func NewLikeUsecase(
 
 // TogglePostLike
 func (u *likeUsecase) TogglePostLike(ctx context.Context, userID uint, postID uint) (*domain.Like, error) {
+	// Validate user
 	if err := u.validateUser(ctx, userID); err != nil {
 		return nil, err
 	}
-	if _, err := u.postRepo.FindByID(ctx, postID); err != nil {
+
+	// Check if post exists
+	post, err := u.postRepo.FindByID(ctx, postID)
+	if err != nil || post == nil {
 		return nil, errors.New("post not found")
 	}
 
-	existing, _ := u.likeRepo.FindByUserAndPost(ctx, userID, postID)
-	if existing != nil {
-		return nil, u.likeRepo.Delete(ctx, userID, &postID, nil)
+	// Check existing like
+	existing, err := u.likeRepo.FindByUserAndPost(ctx, userID, postID)
+	if err != nil {
+		return nil, err
 	}
 
-	like := &domain.Like{UserID: userID, PostID: &postID}
-	return like, u.likeRepo.Create(ctx, like)
+	if existing != nil {
+		// Unlike - delete like and decrement count
+		err = u.likeRepo.Delete(ctx, userID, &postID, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		// Decrement post likes count
+		if post.Likes > 0 {
+			post.Likes--
+			_ = u.postRepo.Update(ctx, post)
+		}
+
+		return nil, nil // unlike করলে nil return
+	}
+
+	// ✅ Like - create like and increment count
+	like := &domain.Like{
+		UserID: userID,
+		PostID: &postID,
+	}
+
+	err = u.likeRepo.Create(ctx, like)
+	if err != nil {
+		return nil, err
+	}
+
+	// Increment post likes count
+	post.Likes++
+	_ = u.postRepo.Update(ctx, post) // Update post with new count
+
+	return like, nil
 }
 
-// ToggleCommentLike
+// ToggleCommentLike - ✅ আপডেটেড
 func (u *likeUsecase) ToggleCommentLike(ctx context.Context, userID uint, commentID uint) (*domain.Like, error) {
+	// Validate user
 	if err := u.validateUser(ctx, userID); err != nil {
 		return nil, err
 	}
-	if _, err := u.commentRepo.FindByID(ctx, commentID); err != nil {
+
+	// Check if comment exists
+	comment, err := u.commentRepo.FindByID(ctx, commentID)
+	if err != nil || comment == nil {
 		return nil, errors.New("comment not found")
 	}
 
-	existing, _ := u.likeRepo.FindByUserAndComment(ctx, userID, commentID)
-	if existing != nil {
-		return nil, u.likeRepo.Delete(ctx, userID, nil, &commentID)
+	// Check existing like
+	existing, err := u.likeRepo.FindByUserAndComment(ctx, userID, commentID)
+	if err != nil {
+		return nil, err
 	}
 
-	like := &domain.Like{UserID: userID, CommentID: &commentID}
-	return like, u.likeRepo.Create(ctx, like)
+	if existing != nil {
+		// Unlike
+		err = u.likeRepo.Delete(ctx, userID, nil, &commentID)
+		if err != nil {
+			return nil, err
+		}
+
+		// Decrement comment likes count (if you have comment.Likes field)
+		// comment.Likes--
+		_ = u.commentRepo.Update(ctx, comment)
+
+		return nil, nil
+	}
+
+	// Like
+	like := &domain.Like{
+		UserID:    userID,
+		CommentID: &commentID,
+	}
+
+	err = u.likeRepo.Create(ctx, like)
+	if err != nil {
+		return nil, err
+	}
+
+	// Increment comment likes count
+	// comment.Likes++
+	_ = u.commentRepo.Update(ctx, comment)
+
+	return like, nil
 }
 
 // GetPostLikes

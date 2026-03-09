@@ -287,9 +287,9 @@ func (u *postUsecase) SearchPosts(ctx context.Context, params *repository.Search
 	return u.postRepo.SearchPosts(ctx, params)
 }
 
-// GetPersonalizedFeed - পার্সোনালাইজড ফিড
+// GetPersonalizedFeed
 func (u *postUsecase) GetPersonalizedFeed(ctx context.Context, userID uint, params *domain.FeedQueryParams) (*domain.FeedResponse, error) {
-	// ডিফল্ট ভ্যালু সেট
+
 	if params.Page < 1 {
 		params.Page = 1
 	}
@@ -322,7 +322,7 @@ func (u *postUsecase) GetPersonalizedFeed(ctx context.Context, userID uint, para
 
 // GetPublicFeed - পাবলিক ফিড
 func (u *postUsecase) GetPublicFeed(ctx context.Context, params *domain.FeedQueryParams) (*domain.FeedResponse, error) {
-	// ডিফল্ট ভ্যালু সেট
+
 	if params.Page < 1 {
 		params.Page = 1
 	}
@@ -354,9 +354,9 @@ func (u *postUsecase) GetPublicFeed(ctx context.Context, params *domain.FeedQuer
 	return response, nil
 }
 
-// FollowTag - ট্যাগ ফলো
+// FollowTag
 func (u *postUsecase) FollowTag(ctx context.Context, userID, tagID uint) error {
-	// ট্যাগ এক্সিস্ট করে কিনা চেক
+
 	tag, err := u.tagRepo.FindByID(ctx, tagID)
 	if err != nil {
 		return err

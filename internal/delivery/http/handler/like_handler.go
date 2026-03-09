@@ -10,10 +10,11 @@ import (
 
 type LikeHandler struct {
 	likeUsecase usecase.LikeUsecase
+	postUsecase usecase.PostUsecase
 }
 
-func NewLikeHandler(likeUsecase usecase.LikeUsecase) *LikeHandler {
-	return &LikeHandler{likeUsecase: likeUsecase}
+func NewLikeHandler(likeUsecase usecase.LikeUsecase, postUsecase usecase.PostUsecase) *LikeHandler {
+	return &LikeHandler{likeUsecase: likeUsecase, postUsecase: postUsecase}
 }
 
 // TogglePost
@@ -30,10 +31,14 @@ func (h *LikeHandler) TogglePost(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	if like == nil {
-		return c.JSON(http.StatusOK, map[string]string{"message": "unliked"})
+	post, err := h.postUsecase.GetByID(c.Request().Context(), uint(postID))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to fetch updated post"})
 	}
-	return c.JSON(http.StatusOK, like)
+
+	response := post.ToResponse()
+	response.IsLiked = (like != nil)
+	return c.JSON(http.StatusOK, response)
 }
 
 // GetPostLikes
