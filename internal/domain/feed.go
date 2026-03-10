@@ -19,6 +19,8 @@ type FeedPost struct {
 	Content       string    `json:"content"`
 	AuthorID      uint      `json:"authorId"`
 	AuthorName    string    `json:"authorName"`
+	FeaturedImage string    `json:"featuredImage"`
+	CoverImage    string    `json:"coverImage"`
 	AuthorEmail   string    `json:"authorEmail"`
 	CreatedAt     time.Time `json:"createdAt"`
 	LikesCount    int64     `json:"likesCount"`

@@ -65,7 +65,8 @@ func (h *UploadHandler) UploadImage(c echo.Context) error {
 	}
 
 	// Return the URL
-	imageURL := fmt.Sprintf("/uploads/%s", filename)
+	baseURL := "http://localhost:8080"
+	imageURL := fmt.Sprintf("%s/uploads/%s", baseURL, filename)
 	return c.JSON(http.StatusOK, map[string]string{
 		"url": imageURL,
 	})

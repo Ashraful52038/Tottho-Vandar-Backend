@@ -51,7 +51,7 @@ func (h *PostHandler) CreatePost(c echo.Context) error {
 		})
 	}
 
-	return c.JSON(http.StatusCreated, post)
+	return c.JSON(http.StatusCreated, post.ToResponse())
 }
 
 // UpdatePost handler
@@ -131,7 +131,7 @@ func (h *PostHandler) GetPostByID(c echo.Context) error {
 		})
 	}
 
-	return c.JSON(http.StatusOK, post)
+	return c.JSON(http.StatusOK, post.ToResponse())
 }
 
 // GetAllPosts handler
@@ -201,6 +201,11 @@ func (h *PostHandler) GetAllPosts(c echo.Context) error {
 		})
 	}
 
+	postResponses := make([]*domain.PostResponse, len(posts))
+	for i, post := range posts {
+		postResponses[i] = post.ToResponse()
+	}
+
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"posts": posts,
 		"total": total,
@@ -225,7 +230,12 @@ func (h *PostHandler) GetMyPosts(c echo.Context) error {
 		})
 	}
 
-	return c.JSON(http.StatusOK, posts)
+	postResponses := make([]*domain.PostResponse, len(posts))
+	for i, post := range posts {
+		postResponses[i] = post.ToResponse()
+	}
+
+	return c.JSON(http.StatusOK, postResponses)
 }
 
 func (h *PostHandler) SearchPosts(c echo.Context) error {

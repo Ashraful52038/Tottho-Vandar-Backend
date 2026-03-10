@@ -48,7 +48,25 @@ func (r *Router) SetupRoutes(e *echo.Echo) {
 	// Middleware
 	e.Use(echomiddleware.Logger())
 	e.Use(echomiddleware.Recover())
-	e.Use(echomiddleware.CORS())
+
+	// ✅ সঠিক CORS কনফিগারেশন
+	e.Use(echomiddleware.CORSWithConfig(echomiddleware.CORSConfig{
+		AllowOrigins: []string{"http://localhost:3000"}, // আপনার frontend URL
+		AllowMethods: []string{echo.GET, echo.POST, echo.PUT, echo.DELETE, echo.OPTIONS},
+		AllowHeaders: []string{
+			echo.HeaderOrigin,
+			echo.HeaderContentType,
+			echo.HeaderAccept,
+			echo.HeaderAuthorization,
+			echo.HeaderAccessControlAllowHeaders,
+			echo.HeaderAccessControlAllowOrigin,
+		},
+		AllowCredentials: true,
+		MaxAge:           86400, // 24 hours
+	}))
+
+	// ✅ স্ট্যাটিক ফাইল সার্ভ করুন
+	e.Static("/uploads", "./uploads")
 
 	// Public routes
 	api := e.Group("/api")
