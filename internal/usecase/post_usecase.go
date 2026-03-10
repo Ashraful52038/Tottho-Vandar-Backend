@@ -93,10 +93,12 @@ func (u *postUsecase) Create(ctx context.Context, userID uint, req *domain.Creat
 	}
 
 	post := &domain.Post{
-		Title:     req.Title,
-		Content:   req.Content,
-		AuthorID:  userID,
-		Published: req.Published,
+		Title:         req.Title,
+		Content:       req.Content,
+		AuthorID:      userID,
+		FeaturedImage: req.FeaturedImage, // ✅ এই লাইন যোগ করুন
+		CoverImage:    req.CoverImage,
+		Published:     req.Published,
 	}
 
 	// Create post
