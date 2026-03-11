@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/Ashraful52038/tottho-vandar-backend/internal/domain"
@@ -25,10 +26,18 @@ func (r *postRepository) Create(ctx context.Context, post *domain.Post) error {
 
 func (r *postRepository) FindByID(ctx context.Context, id uint) (*domain.Post, error) {
 	var post domain.Post
-	err := r.db.WithContext(ctx).Preload("Author").Preload("Tags").First(&post, id).Error
+	err := r.db.WithContext(ctx).
+		Preload("Author").
+		Preload("Tags").
+		First(&post, id).
+		Error
+
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
+
+	log.Printf("Repository FindByID: Post ID=%d, FeaturedImage=%q", post.ID, post.FeaturedImage)
+
 	return &post, err
 }
 
@@ -134,7 +143,7 @@ func (r *postRepository) SearchByTags(ctx context.Context, tagIDs []uint, page, 
 	return posts, total, err
 }
 
-// SearchPosts - সার্চ ও ফিল্টার ফাংশন (ফিক্সড)
+// SearchPosts
 func (r *postRepository) SearchPosts(ctx context.Context, params *repository.SearchParams) ([]domain.Post, int64, error) {
 	var posts []domain.Post
 	var total int64
@@ -193,7 +202,7 @@ func (r *postRepository) SearchPosts(ctx context.Context, params *repository.Sea
 	return posts, total, err
 }
 
-// GetPersonalizedFeed - ইউজারের পার্সোনালাইজড ফিড (ফিক্সড)
+// GetPersonalizedFeed
 func (r *postRepository) GetPersonalizedFeed(ctx context.Context, userID uint, params *domain.FeedQueryParams) ([]domain.FeedPost, int64, error) {
 	var posts []domain.FeedPost
 	var total int64

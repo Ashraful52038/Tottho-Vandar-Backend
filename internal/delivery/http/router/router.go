@@ -49,9 +49,8 @@ func (r *Router) SetupRoutes(e *echo.Echo) {
 	e.Use(echomiddleware.Logger())
 	e.Use(echomiddleware.Recover())
 
-	// ✅ সঠিক CORS কনফিগারেশন
 	e.Use(echomiddleware.CORSWithConfig(echomiddleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost:3000"}, // আপনার frontend URL
+		AllowOrigins: []string{"http://localhost:3000"},
 		AllowMethods: []string{echo.GET, echo.POST, echo.PUT, echo.DELETE, echo.OPTIONS},
 		AllowHeaders: []string{
 			echo.HeaderOrigin,
@@ -62,10 +61,9 @@ func (r *Router) SetupRoutes(e *echo.Echo) {
 			echo.HeaderAccessControlAllowOrigin,
 		},
 		AllowCredentials: true,
-		MaxAge:           86400, // 24 hours
+		MaxAge:           86400,
 	}))
 
-	// ✅ স্ট্যাটিক ফাইল সার্ভ করুন
 	e.Static("/uploads", "./uploads")
 
 	// Public routes
@@ -81,7 +79,7 @@ func (r *Router) SetupRoutes(e *echo.Echo) {
 			auth.POST("/reset-password", r.authHandler.ResetPassword)
 		}
 
-		// ✅ Public Feed Route
+		// Public Feed Route
 		api.GET("/feed/public", r.feedHandler.GetPublicFeed)
 
 		// Public post routes
@@ -89,7 +87,7 @@ func (r *Router) SetupRoutes(e *echo.Echo) {
 		api.GET("/posts/search", r.postHandler.SearchPosts)
 		api.GET("/posts/:id", r.postHandler.GetPostByID)
 
-		// ✅ Public tag routes
+		// Public tag routes
 		api.GET("/tags", r.tagHandler.GetAllTags)
 		api.GET("/tags/popular", r.tagHandler.GetPopularTags)
 		api.GET("/tags/:id", r.tagHandler.GetTagByID)

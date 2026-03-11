@@ -96,7 +96,7 @@ func (u *postUsecase) Create(ctx context.Context, userID uint, req *domain.Creat
 		Title:         req.Title,
 		Content:       req.Content,
 		AuthorID:      userID,
-		FeaturedImage: req.FeaturedImage, // ✅ এই লাইন যোগ করুন
+		FeaturedImage: req.FeaturedImage,
 		CoverImage:    req.CoverImage,
 		Published:     req.Published,
 	}

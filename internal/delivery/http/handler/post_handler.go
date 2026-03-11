@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -131,6 +132,8 @@ func (h *PostHandler) GetPostByID(c echo.Context) error {
 		})
 	}
 
+	log.Printf("Post by ID %d: FeaturedImage=%q", post.ID, post.FeaturedImage)
+
 	return c.JSON(http.StatusOK, post.ToResponse())
 }
 
@@ -167,7 +170,6 @@ func (h *PostHandler) GetAllPosts(c echo.Context) error {
 		limit = 10
 	}
 
-	// যদি কোনো ফিল্টার থাকে, তাহলে search ব্যবহার করুন
 	if len(tagIDs) > 0 || authorID != nil {
 		params := &repository.SearchParams{
 			TagIDs:   tagIDs,

@@ -41,8 +41,8 @@ type CreatePostRequest struct {
 type UpdatePostRequest struct {
 	Title         *string  `json:"title,omitempty" validate:"omitempty,min=3,max=200"`
 	Content       *string  `json:"content,omitempty" validate:"omitempty,min=10"`
-	TagIDs        []uint   `json:"tagIds,omitempty"`        // Explicit []uint instead of interface{}
-	FeaturedImage *string  `json:"featuredImage,omitempty"` // ✅ যোগ করুন
+	TagIDs        []uint   `json:"tagIds,omitempty"`
+	FeaturedImage *string  `json:"featuredImage,omitempty"`
 	CoverImage    *string  `json:"coverImage,omitempty"`
 	TagNames      []string `json:"tagNames,omitempty"`
 	Published     *bool    `json:"published,omitempty"`
@@ -57,18 +57,20 @@ func (p *Post) ToResponse() *PostResponse {
 	}
 
 	return &PostResponse{
-		ID:        p.ID,
-		Title:     p.Title,
-		Content:   p.Content,
-		AuthorID:  p.AuthorID,
-		Author:    authorResponse,
-		Tags:      p.Tags,
-		Likes:     p.Likes,
-		Comments:  p.Comments,
-		Published: p.Published,
-		CreatedAt: p.CreatedAt,
-		UpdatedAt: p.UpdatedAt,
-		IsLiked:   false,
+		ID:            p.ID,
+		Title:         p.Title,
+		Content:       p.Content,
+		AuthorID:      p.AuthorID,
+		Author:        authorResponse,
+		FeaturedImage: p.FeaturedImage,
+		CoverImage:    p.CoverImage,
+		Tags:          p.Tags,
+		Likes:         p.Likes,
+		Comments:      p.Comments,
+		Published:     p.Published,
+		CreatedAt:     p.CreatedAt,
+		UpdatedAt:     p.UpdatedAt,
+		IsLiked:       false,
 	}
 }
 
@@ -79,7 +81,7 @@ type PostResponse struct {
 	Content       string        `json:"content"`
 	AuthorID      uint          `json:"authorId"`
 	Author        *UserResponse `json:"author,omitempty"`
-	FeaturedImage string        `json:"featuredImage"` // ✅ যোগ করুন
+	FeaturedImage string        `json:"featuredImage"`
 	CoverImage    string        `json:"coverImage"`
 	Tags          []Tag         `json:"tags"`
 	Likes         int           `json:"likes"`
