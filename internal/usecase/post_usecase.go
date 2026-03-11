@@ -144,6 +144,14 @@ func (u *postUsecase) Update(ctx context.Context, postID uint, userID uint, req 
 		post.Published = *req.Published
 	}
 
+	if req.FeaturedImage != nil {
+		post.FeaturedImage = *req.FeaturedImage
+	}
+
+	if req.CoverImage != nil {
+		post.CoverImage = *req.CoverImage
+	}
+
 	// Update post
 	err = u.postRepo.Update(ctx, post)
 	if err != nil {
