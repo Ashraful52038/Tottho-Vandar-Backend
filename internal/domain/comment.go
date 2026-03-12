@@ -5,10 +5,14 @@ import "time"
 type Comment struct {
 	ID        uint      `json:"id" gorm:"primaryKey"`
 	Content   string    `json:"content" gorm:"type:text;not null"`
-	PostID    uint      `json:"postId" gorm:"not nul;index"`
-	UserID    uint      `json:"userId" gorm:"not null;index"`
-	User      User      `json:"user" gorm:"foreignKey:UserID"`
+	PostID    uint      `json:"postId" gorm:"not null;column:post_id;index"`
+	AuthorID  uint      `json:"authorId" gorm:"not null;column:author_id;index"`
+	User      User      `json:"author" gorm:"foreignKey:AuthorID"`
 	Post      Post      `json:"post,omitempty" gorm:"foreignKey:PostID"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+func (Comment) TableName() string {
+	return "comments"
 }

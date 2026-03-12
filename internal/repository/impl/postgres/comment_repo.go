@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"errors"
+	"log"
 
 	"github.com/Ashraful52038/tottho-vandar-backend/internal/domain"
 	"gorm.io/gorm"
@@ -17,8 +18,26 @@ func NewCommentRepository(db *gorm.DB) *commentRepository {
 	return &commentRepository{db: db}
 }
 
+// internal/repository/impl/postgres/comment_repo.go
+
 func (r *commentRepository) Create(ctx context.Context, comment *domain.Comment) error {
-	return r.db.WithContext(ctx).Create(comment).Error
+	// ✅ ডিবাগ প্রিন্ট
+	log.Printf("Creating comment - AuthorID: %d, PostID: %d, Content: %s",
+		comment.AuthorID, comment.PostID, comment.Content)
+
+	// ✅ GORM ডিবাগ মোড
+	db := r.db.WithContext(ctx).Debug()
+
+	// ✅ Force GORM to use specific columns
+	result := db.Select("Content", "PostID", "AuthorID", "CreatedAt", "UpdatedAt").Create(comment)
+
+	if result.Error != nil {
+		log.Printf("DB Error: %v", result.Error)
+		return result.Error
+	}
+
+	log.Printf("Comment created with ID: %d", comment.ID)
+	return nil
 }
 
 func (r *commentRepository) FindByID(ctx context.Context, id uint) (*domain.Comment, error) {

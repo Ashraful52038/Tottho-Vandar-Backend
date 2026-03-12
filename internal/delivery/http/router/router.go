@@ -147,10 +147,10 @@ func (r *Router) SetupRoutes(e *echo.Echo) {
 			//Feed Routes (Protected)
 			feed := protected.Group("/feed")
 			{
-				feed.GET("", r.feedHandler.GetPersonalizedFeed)            // GET /api/feed
-				feed.GET("/tags/followed", r.feedHandler.GetFollowedTags)  // GET /api/feed/tags/followed
-				feed.POST("/tags/:id/follow", r.feedHandler.FollowTag)     // POST /api/feed/tags/1/follow
-				feed.POST("/tags/:id/unfollow", r.feedHandler.UnfollowTag) // POST /api/feed/tags/1/unfollow
+				feed.GET("", r.feedHandler.GetPersonalizedFeed)
+				feed.GET("/tags/followed", r.feedHandler.GetFollowedTags)
+				feed.POST("/tags/:id/follow", r.feedHandler.FollowTag)
+				feed.POST("/tags/:id/unfollow", r.feedHandler.UnfollowTag)
 			}
 
 			// Upload routes

@@ -53,9 +53,9 @@ func (u *commentUsecase) Create(ctx context.Context, userID uint, postID uint, c
 	}
 
 	comment := &domain.Comment{
-		Content: content,
-		PostID:  postID,
-		UserID:  userID,
+		Content:  content,
+		PostID:   postID,
+		AuthorID: userID,
 	}
 
 	err = u.commentRepo.Create(ctx, comment)
@@ -123,7 +123,7 @@ func (u *commentUsecase) Update(ctx context.Context, commentID uint, userID uint
 		return nil, errors.New("comment not found")
 	}
 
-	if comment.UserID != userID {
+	if comment.AuthorID != userID {
 		return nil, errors.New("unauthorized")
 	}
 
@@ -138,7 +138,7 @@ func (u *commentUsecase) Delete(ctx context.Context, commentID uint, userID uint
 		return errors.New("comment not found")
 	}
 
-	if comment.UserID != userID {
+	if comment.AuthorID != userID {
 		return errors.New("unauthorized")
 	}
 
