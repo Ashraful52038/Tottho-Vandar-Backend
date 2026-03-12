@@ -118,6 +118,8 @@ func (r *Router) SetupRoutes(e *echo.Echo) {
 				post.PUT("/:id", r.postHandler.UpdatePost)
 				post.DELETE("/:id", r.postHandler.DeletePost)
 				post.GET("/my-posts", r.postHandler.GetMyPosts)
+				post.POST("/:postId/comments", r.commentHandler.Create)
+				post.GET("/:postId/comments", r.commentHandler.GetByPost)
 			}
 
 			// Protected tag routes
@@ -131,7 +133,6 @@ func (r *Router) SetupRoutes(e *echo.Echo) {
 			// Comment routes
 			comment := protected.Group("/comments")
 			{
-				comment.POST("/posts/:postId", r.commentHandler.Create)
 				comment.PUT("/:id", r.commentHandler.Update)
 				comment.DELETE("/:id", r.commentHandler.Delete)
 			}
