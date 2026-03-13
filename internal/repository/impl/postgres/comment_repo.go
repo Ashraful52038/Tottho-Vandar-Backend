@@ -18,17 +18,12 @@ func NewCommentRepository(db *gorm.DB) *commentRepository {
 	return &commentRepository{db: db}
 }
 
-// internal/repository/impl/postgres/comment_repo.go
-
 func (r *commentRepository) Create(ctx context.Context, comment *domain.Comment) error {
-	// ✅ ডিবাগ প্রিন্ট
 	log.Printf("Creating comment - AuthorID: %d, PostID: %d, Content: %s",
 		comment.AuthorID, comment.PostID, comment.Content)
 
-	// ✅ GORM ডিবাগ মোড
 	db := r.db.WithContext(ctx).Debug()
 
-	// ✅ Force GORM to use specific columns
 	result := db.Select("Content", "PostID", "AuthorID", "CreatedAt", "UpdatedAt").Create(comment)
 
 	if result.Error != nil {

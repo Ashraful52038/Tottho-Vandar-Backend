@@ -108,3 +108,7 @@ func (r *likeRepository) FindByUserID(ctx context.Context, userID uint) ([]domai
 		Find(&likes).Error
 	return likes, err
 }
+
+func (r *likeRepository) DeleteByID(ctx context.Context, id uint) error {
+	return r.db.WithContext(ctx).Delete(&domain.Like{}, id).Error
+}

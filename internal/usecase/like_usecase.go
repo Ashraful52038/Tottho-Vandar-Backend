@@ -71,10 +71,9 @@ func (u *likeUsecase) TogglePostLike(ctx context.Context, userID uint, postID ui
 			_ = u.postRepo.Update(ctx, post)
 		}
 
-		return nil, nil // unlike করলে nil return
+		return nil, nil
 	}
 
-	// ✅ Like - create like and increment count
 	like := &domain.Like{
 		UserID: userID,
 		PostID: &postID,
@@ -87,12 +86,12 @@ func (u *likeUsecase) TogglePostLike(ctx context.Context, userID uint, postID ui
 
 	// Increment post likes count
 	post.Likes++
-	_ = u.postRepo.Update(ctx, post) // Update post with new count
+	_ = u.postRepo.Update(ctx, post)
 
 	return like, nil
 }
 
-// ToggleCommentLike - ✅ আপডেটেড
+// ToggleCommentLike
 func (u *likeUsecase) ToggleCommentLike(ctx context.Context, userID uint, commentID uint) (*domain.Like, error) {
 	// Validate user
 	if err := u.validateUser(ctx, userID); err != nil {
@@ -113,7 +112,7 @@ func (u *likeUsecase) ToggleCommentLike(ctx context.Context, userID uint, commen
 
 	if existing != nil {
 		// Unlike
-		err = u.likeRepo.Delete(ctx, userID, nil, &commentID)
+		err = u.likeRepo.DeleteByID(ctx, existing.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -128,6 +127,7 @@ func (u *likeUsecase) ToggleCommentLike(ctx context.Context, userID uint, commen
 	// Like
 	like := &domain.Like{
 		UserID:    userID,
+		PostID:    nil,
 		CommentID: &commentID,
 	}
 
@@ -135,10 +135,6 @@ func (u *likeUsecase) ToggleCommentLike(ctx context.Context, userID uint, commen
 	if err != nil {
 		return nil, err
 	}
-
-	// Increment comment likes count
-	// comment.Likes++
-	_ = u.commentRepo.Update(ctx, comment)
 
 	return like, nil
 }
