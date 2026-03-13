@@ -16,6 +16,7 @@ type LikeUsecase interface {
 	GetUserLikes(ctx context.Context, userID uint) ([]domain.Like, error)
 	GetCommentLikes(ctx context.Context, commentID uint) ([]domain.Like, error)
 	GetCommentLikesCount(ctx context.Context, commentID uint) (int64, error)
+	CheckUserLikedComment(ctx context.Context, userID uint, commentID uint) (bool, error)
 }
 
 type likeUsecase struct {
@@ -183,4 +184,12 @@ func (u *likeUsecase) GetCommentLikes(ctx context.Context, commentID uint) ([]do
 // GetCommentLikesCount
 func (u *likeUsecase) GetCommentLikesCount(ctx context.Context, commentID uint) (int64, error) {
 	return u.likeRepo.CountByCommentID(ctx, commentID)
+}
+
+func (u *likeUsecase) CheckUserLikedComment(ctx context.Context, userID uint, commentID uint) (bool, error) {
+	like, err := u.likeRepo.FindByUserAndComment(ctx, userID, commentID)
+	if err != nil {
+		return false, err
+	}
+	return like != nil, nil
 }

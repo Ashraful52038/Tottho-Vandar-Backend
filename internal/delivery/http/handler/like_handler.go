@@ -9,12 +9,21 @@ import (
 )
 
 type LikeHandler struct {
-	likeUsecase usecase.LikeUsecase
-	postUsecase usecase.PostUsecase
+	likeUsecase    usecase.LikeUsecase
+	postUsecase    usecase.PostUsecase
+	commentUsecase usecase.CommentUsecase
 }
 
-func NewLikeHandler(likeUsecase usecase.LikeUsecase, postUsecase usecase.PostUsecase) *LikeHandler {
-	return &LikeHandler{likeUsecase: likeUsecase, postUsecase: postUsecase}
+func NewLikeHandler(
+	likeUsecase usecase.LikeUsecase,
+	postUsecase usecase.PostUsecase,
+	commentUsecase usecase.CommentUsecase,
+) *LikeHandler {
+	return &LikeHandler{
+		likeUsecase:    likeUsecase,
+		postUsecase:    postUsecase,
+		commentUsecase: commentUsecase,
+	}
 }
 
 // TogglePost
@@ -75,10 +84,16 @@ func (h *LikeHandler) ToggleComment(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	if like == nil {
-		return c.JSON(http.StatusOK, map[string]string{"message": "unliked"})
+	comment, err := h.commentUsecase.GetByID(c.Request().Context(), uint(commentID))
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to fetch comment"})
 	}
-	return c.JSON(http.StatusOK, like)
+
+	if like == nil {
+		return c.JSON(http.StatusOK, map[string]interface{}{"message": "unliked", "comment": comment})
+	}
+	return c.JSON(http.StatusOK, map[string]interface{}{"message": "liked", "like": like, "comment": comment})
 }
 
 // GetCommentLikes

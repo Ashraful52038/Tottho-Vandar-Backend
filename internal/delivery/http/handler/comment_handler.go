@@ -10,10 +10,11 @@ import (
 
 type CommentHandler struct {
 	commentUsecase usecase.CommentUsecase
+	likeUsecase    usecase.LikeUsecase
 }
 
-func NewCommentHandler(commentUsecase usecase.CommentUsecase) *CommentHandler {
-	return &CommentHandler{commentUsecase: commentUsecase}
+func NewCommentHandler(commentUsecase usecase.CommentUsecase, likeUsecase usecase.LikeUsecase) *CommentHandler {
+	return &CommentHandler{commentUsecase: commentUsecase, likeUsecase: likeUsecase}
 }
 
 func (h *CommentHandler) Create(c echo.Context) error {
@@ -49,7 +50,35 @@ func (h *CommentHandler) GetByPost(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, comments)
+	userID, _ := c.Get("userID").(uint)
+
+	var response []map[string]interface{}
+	for _, comment := range comments {
+		commentMap := map[string]interface{}{
+			"id":       comment.ID,
+			"content":  comment.Content,
+			"postId":   comment.PostID,
+			"parentId": comment.ParentID,
+			"author": map[string]interface{}{
+				"id":     comment.User.ID,
+				"name":   comment.User.Name,
+				"avatar": comment.User.Avatar,
+			},
+			"likes":     comment.Likes,
+			"createdAt": comment.CreatedAt,
+			"updatedAt": comment.UpdatedAt,
+		}
+
+		if userID > 0 {
+			isLiked, _ := h.likeUsecase.CheckUserLikedComment(c.Request().Context(), userID, comment.ID)
+			commentMap["isLiked"] = isLiked
+		} else {
+			commentMap["isLiked"] = false
+		}
+
+		response = append(response, commentMap)
+	}
+	return c.JSON(http.StatusOK, response)
 }
 
 func (h *CommentHandler) Update(c echo.Context) error {

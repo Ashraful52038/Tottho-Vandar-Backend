@@ -13,6 +13,7 @@ import (
 type CommentUsecase interface {
 	Create(ctx context.Context, userID uint, postID uint, content string) (*domain.Comment, error)
 	GetByPostID(ctx context.Context, postID uint) ([]domain.Comment, error)
+	GetByID(ctx context.Context, id uint) (*domain.Comment, error)
 	Update(ctx context.Context, commentID uint, userID uint, content string) (*domain.Comment, error)
 	Delete(ctx context.Context, commentID uint, userID uint) error
 }
@@ -68,13 +69,11 @@ func (u *commentUsecase) Create(ctx context.Context, userID uint, postID uint, c
 }
 
 func (u *commentUsecase) sendReplyNotification(ctx context.Context, post *domain.Post, commenter *domain.User, content string) {
-	// পোস্টের লেখককে notification পাঠাবেন (নিজের পোস্টে comment করলে না)
 	if post.AuthorID == commenter.ID {
 		log.Printf("User commented on own post, skipping notification")
 		return
 	}
 
-	// পোস্টের লেখকের তথ্য নিন
 	postAuthor, err := u.userRepo.FindByID(ctx, post.AuthorID)
 	if err != nil || postAuthor == nil {
 		log.Printf("Failed to find post author: %v", err)
@@ -143,4 +142,12 @@ func (u *commentUsecase) Delete(ctx context.Context, commentID uint, userID uint
 	}
 
 	return u.commentRepo.Delete(ctx, commentID)
+}
+
+func (u *commentUsecase) GetByID(ctx context.Context, id uint) (*domain.Comment, error) {
+	comment, err := u.commentRepo.FindByID(ctx, id)
+	if err != nil || comment == nil {
+		return nil, errors.New("comment not found")
+	}
+	return comment, nil
 }
