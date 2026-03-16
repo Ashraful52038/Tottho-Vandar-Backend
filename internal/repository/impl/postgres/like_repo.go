@@ -98,17 +98,41 @@ func (r *likeRepository) CountByCommentID(ctx context.Context, commentID uint) (
 	return count, err
 }
 
-func (r *likeRepository) FindByUserID(ctx context.Context, userID uint) ([]domain.Like, error) {
+func (r *likeRepository) FindByUserID(ctx context.Context, userID uint, offset, limit int) ([]domain.Like, int64, error) {
 	var likes []domain.Like
+	var total int64
+
+	// Total count
 	err := r.db.WithContext(ctx).
+		Model(&domain.Like{}).
+		Where("user_id = ?", userID).
+		Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Paginated likes
+	err = r.db.WithContext(ctx).
 		Where("user_id = ?", userID).
 		Preload("Post").
 		Preload("Comment").
+		Offset(offset).
+		Limit(limit).
 		Order("created_at desc").
 		Find(&likes).Error
-	return likes, err
+
+	return likes, total, err
 }
 
 func (r *likeRepository) DeleteByID(ctx context.Context, id uint) error {
 	return r.db.WithContext(ctx).Delete(&domain.Like{}, id).Error
+}
+
+func (r *likeRepository) CountByUserID(ctx context.Context, userID uint) (int64, error) {
+	var count int64
+	err := r.db.WithContext(ctx).
+		Model(&domain.Like{}).
+		Where("user_id = ?", userID).
+		Count(&count).Error
+	return count, err
 }

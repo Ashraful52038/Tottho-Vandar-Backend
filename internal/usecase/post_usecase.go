@@ -227,7 +227,13 @@ func (u *postUsecase) GetByUserID(ctx context.Context, userID uint) ([]domain.Po
 	if err != nil || user == nil {
 		return nil, errors.New("user not found")
 	}
-	return u.postRepo.FindByUserID(ctx, userID)
+
+	posts, _, err := u.postRepo.FindByUserID(ctx, userID, 0, 1000) // offset 0, limit 1000
+	if err != nil {
+		return nil, err
+	}
+
+	return posts, nil
 }
 
 func (u *postUsecase) GetByTagID(ctx context.Context, tagID uint, page, limit int) ([]domain.Post, int64, error) {

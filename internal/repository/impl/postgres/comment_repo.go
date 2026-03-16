@@ -61,3 +61,45 @@ func (r *commentRepository) Update(ctx context.Context, comment *domain.Comment)
 func (r *commentRepository) Delete(ctx context.Context, id uint) error {
 	return r.db.WithContext(ctx).Delete(&domain.Comment{}, id).Error
 }
+
+func (r *commentRepository) FindByUserID(ctx context.Context, userID uint, offset, limit int) ([]domain.Comment, int64, error) {
+	var comments []domain.Comment
+	var total int64
+
+	db := r.db.WithContext(ctx).Model(&domain.Comment{}).Where("author_id = ?", userID)
+
+	// Total count
+	err := db.Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Comments with pagination
+	err = db.Preload("User").
+		Offset(offset).
+		Limit(limit).
+		Order("created_at DESC").
+		Find(&comments).Error
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Post titles আলাদা করে fetch করতে হবে
+	for i := range comments {
+		var post domain.Post
+		r.db.WithContext(ctx).Select("title").First(&post, comments[i].PostID)
+		comments[i].PostTitle = post.Title
+	}
+
+	return comments, total, nil
+}
+
+func (r *commentRepository) CountByUserID(ctx context.Context, userID uint) (int64, error) {
+	var count int64
+	err := r.db.WithContext(ctx).
+		Model(&domain.Comment{}).
+		Where("author_id = ?", userID).
+		Count(&count).Error
+	return count, err
+}

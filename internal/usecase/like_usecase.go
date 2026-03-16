@@ -158,7 +158,13 @@ func (u *likeUsecase) GetUserLikes(ctx context.Context, userID uint) ([]domain.L
 	if err := u.validateUser(ctx, userID); err != nil {
 		return nil, err
 	}
-	return u.likeRepo.FindByUserID(ctx, userID)
+
+	likes, _, err := u.likeRepo.FindByUserID(ctx, userID, 0, 1000) // offset 0, limit 1000
+	if err != nil {
+		return nil, err
+	}
+
+	return likes, nil
 }
 
 // validateUser

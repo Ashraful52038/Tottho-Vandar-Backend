@@ -73,3 +73,22 @@ func (u *User) ToResponse() *UserResponse {
 		UpdatedAt: u.UpdatedAt,
 	}
 }
+
+type UserStats struct {
+	Posts     int64 `json:"posts"`
+	Comments  int64 `json:"comments"`
+	Likes     int64 `json:"likes"`
+	Followers int64 `json:"followers"`
+	Following int64 `json:"following"`
+}
+
+type UserProfileResponse struct {
+	ID        uint      `json:"id"`
+	Name      string    `json:"name"`
+	Email     string    `json:"email"`
+	Avatar    string    `json:"avatar,omitempty"`
+	Bio       string    `json:"bio,omitempty"`
+	Verified  bool      `json:"verified"`
+	CreatedAt time.Time `json:"createdAt"`
+	Stats     UserStats `json:"stats"`
+}

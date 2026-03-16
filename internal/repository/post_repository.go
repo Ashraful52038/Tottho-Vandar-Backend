@@ -10,7 +10,7 @@ type PostRepository interface {
 	Create(ctx context.Context, post *domain.Post) error
 	FindByID(ctx context.Context, id uint) (*domain.Post, error)
 	FindAll(ctx context.Context, page, limit int) ([]domain.Post, int64, error)
-	FindByUserID(ctx context.Context, userID uint) ([]domain.Post, error)
+	FindByUserID(ctx context.Context, userID uint, offset, limit int) ([]domain.Post, int64, error)
 	Update(ctx context.Context, post *domain.Post) error
 	Delete(ctx context.Context, id uint) error
 	FindByTagID(ctx context.Context, tagID uint, page, limit int) ([]domain.Post, int64, error)
@@ -18,6 +18,7 @@ type PostRepository interface {
 	SearchPosts(ctx context.Context, params *SearchParams) ([]domain.Post, int64, error)
 	GetPersonalizedFeed(ctx context.Context, userID uint, params *domain.FeedQueryParams) ([]domain.FeedPost, int64, error)
 	GetPublicFeed(ctx context.Context, params *domain.FeedQueryParams) ([]domain.FeedPost, int64, error)
+	CountByUserID(ctx context.Context, userID uint) (int64, error)
 }
 
 type SearchParams struct {

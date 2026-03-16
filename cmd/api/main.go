@@ -32,6 +32,7 @@ func main() {
 	likeRepo := postgres.NewLikeRepository(db)
 	tagRepo := postgres.NewTagRepository(db)
 	feedRepo := postRepo
+	followRepo := postgres.NewFollowRepository(db)
 
 	// Initialize services
 	jwtService := jwt.NewJWTService(cfg.JWTSecret, time.Hour*24)
@@ -49,7 +50,7 @@ func main() {
 
 	// Initialize usecases
 	authUsecase := usecase.NewAuthUsecase(userRepo, jwtService, emailService)
-	userUsecase := usecase.NewUserUsecase(userRepo)
+	userUsecase := usecase.NewUserUsecase(userRepo, postRepo, commentRepo, likeRepo, followRepo)
 	postUsecase := usecase.NewPostUsecase(postRepo, userRepo, tagRepo, feedRepo)
 	commentUsecase := usecase.NewCommentUsecase(commentRepo, postRepo, userRepo, emailQueue)
 	likeUsecase := usecase.NewLikeUsecase(likeRepo, postRepo, commentRepo, userRepo)

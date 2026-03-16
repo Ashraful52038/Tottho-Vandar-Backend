@@ -158,6 +158,20 @@ func (r *Router) SetupRoutes(e *echo.Echo) {
 			{
 				upload.POST("/image", r.uploadHandler.UploadImage)
 			}
+
+			userProfile := protected.Group("/users")
+			{
+				userProfile.GET("/:userId", r.userHandler.GetUserProfile)
+				userProfile.GET("/:userId/profile", r.userHandler.GetUserProfile)
+				userProfile.GET("/:userId/posts", r.userHandler.GetUserPosts)
+				userProfile.GET("/:userId/comments", r.userHandler.GetUserComments)
+				userProfile.GET("/:userId/likes", r.userHandler.GetUserLikes)
+				userProfile.GET("/:userId/followers", r.userHandler.GetUserFollowers)
+				userProfile.GET("/:userId/following", r.userHandler.GetUserFollowing)
+				userProfile.GET("/:userId/follow/status", r.userHandler.GetFollowStatus)
+				userProfile.POST("/:userId/follow", r.userHandler.FollowUser)
+				userProfile.DELETE("/:userId/follow", r.userHandler.UnfollowUser)
+			}
 		}
 	}
 }

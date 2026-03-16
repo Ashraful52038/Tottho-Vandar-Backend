@@ -11,6 +11,7 @@ type Comment struct {
 	ParentID  *uint     `json:"parentId,omitempty" gorm:"index"`
 	Likes     int       `json:"likes" gorm:"default:0"`
 	Post      Post      `json:"post,omitempty" gorm:"foreignKey:PostID"`
+	PostTitle string    `json:"postTitle,omitempty" gorm:"-"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }

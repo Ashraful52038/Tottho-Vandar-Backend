@@ -62,13 +62,29 @@ func (r *postRepository) FindAll(ctx context.Context, page, limit int) ([]domain
 	return posts, total, err
 }
 
-func (r *postRepository) FindByUserID(ctx context.Context, userID uint) ([]domain.Post, error) {
+func (r *postRepository) FindByUserID(ctx context.Context, userID uint, offset, limit int) ([]domain.Post, int64, error) {
 	var posts []domain.Post
+	var total int64
+
 	err := r.db.WithContext(ctx).
+		Model(&domain.Post{}).
 		Where("author_id = ?", userID).
+		Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Paginated posts
+	err = r.db.WithContext(ctx).
+		Where("author_id = ?", userID).
+		Preload("Author").
+		Preload("Tags").
+		Offset(offset).
+		Limit(limit).
 		Order("created_at desc").
 		Find(&posts).Error
-	return posts, err
+
+	return posts, total, err
 }
 
 func (r *postRepository) Update(ctx context.Context, post *domain.Post) error {
@@ -290,7 +306,7 @@ func (r *postRepository) GetPersonalizedFeed(ctx context.Context, userID uint, p
 	return posts, total, nil
 }
 
-// GetPublicFeed - পাবলিক ফিড (সকল পোস্ট) (ফিক্সড)
+// GetPublicFeed
 func (r *postRepository) GetPublicFeed(ctx context.Context, params *domain.FeedQueryParams) ([]domain.FeedPost, int64, error) {
 	var posts []domain.FeedPost
 	var total int64
@@ -302,7 +318,6 @@ func (r *postRepository) GetPublicFeed(ctx context.Context, params *domain.FeedQ
 		return nil, 0, err
 	}
 
-	// সর্ট ফিল্ড নির্ধারণ - QF1003 fix (tagged switch)
 	var sortField string
 	switch params.SortBy {
 	case "likes_count":
@@ -393,7 +408,7 @@ func (r *postRepository) GetFollowedTags(ctx context.Context, userID uint) ([]do
 	return tags, err
 }
 
-// GetFollowedTagIDs - ইউজারের ফলো করা ট্যাগের আইডি লিস্ট
+// GetFollowedTagIDs
 func (r *postRepository) GetFollowedTagIDs(ctx context.Context, userID uint) ([]uint, error) {
 	var tagIDs []uint
 	err := r.db.WithContext(ctx).
@@ -401,4 +416,13 @@ func (r *postRepository) GetFollowedTagIDs(ctx context.Context, userID uint) ([]
 		Where("user_id = ?", userID).
 		Pluck("tag_id", &tagIDs).Error
 	return tagIDs, err
+}
+
+func (r *postRepository) CountByUserID(ctx context.Context, userID uint) (int64, error) {
+	var count int64
+	err := r.db.WithContext(ctx).
+		Model(&domain.Post{}).
+		Where("author_id = ? AND deleted_at IS NULL", userID).
+		Count(&count).Error
+	return count, err
 }
