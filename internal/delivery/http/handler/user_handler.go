@@ -111,7 +111,27 @@ func (h *UserHandler) GetUserProfile(c echo.Context) error {
 	return c.JSON(http.StatusOK, user)
 }
 
+func (h *UserHandler) validateAndGetUser(c echo.Context) (uint, error) {
+	userId := c.Param("userId")
+	userID, err := strconv.ParseUint(userId, 10, 32)
+	if err != nil {
+		return 0, echo.NewHTTPError(http.StatusBadRequest, "invalid user id")
+	}
+
+	_, err = h.userUsecase.GetByID(c.Request().Context(), uint(userID))
+	if err != nil {
+		return 0, echo.NewHTTPError(http.StatusNotFound, "user not found")
+	}
+
+	return uint(userID), nil
+}
+
 func (h *UserHandler) GetUserPosts(c echo.Context) error {
+	_, err := h.validateAndGetUser(c)
+	if err != nil {
+		return err
+	}
+
 	userId := c.Param("userId")
 	page, _ := strconv.Atoi(c.QueryParam("page"))
 	limit, _ := strconv.Atoi(c.QueryParam("limit"))
@@ -139,6 +159,11 @@ func (h *UserHandler) GetUserPosts(c echo.Context) error {
 }
 
 func (h *UserHandler) GetUserComments(c echo.Context) error {
+	_, err := h.validateAndGetUser(c)
+	if err != nil {
+		return err
+	}
+
 	userId := c.Param("userId")
 	page, _ := strconv.Atoi(c.QueryParam("page"))
 	limit, _ := strconv.Atoi(c.QueryParam("limit"))
@@ -193,6 +218,12 @@ func (h *UserHandler) GetUserLikes(c echo.Context) error {
 }
 
 func (h *UserHandler) GetUserFollowers(c echo.Context) error {
+
+	_, err := h.validateAndGetUser(c)
+	if err != nil {
+		return err
+	}
+
 	userId := c.Param("userId")
 	page, _ := strconv.Atoi(c.QueryParam("page"))
 	limit, _ := strconv.Atoi(c.QueryParam("limit"))
@@ -204,7 +235,6 @@ func (h *UserHandler) GetUserFollowers(c echo.Context) error {
 		limit = 20
 	}
 
-	// current user ID (যে রিকোয়েস্ট করছে)
 	currentUserID, ok := c.Get("userID").(uint)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, map[string]interface{}{
@@ -228,6 +258,11 @@ func (h *UserHandler) GetUserFollowers(c echo.Context) error {
 }
 
 func (h *UserHandler) GetUserFollowing(c echo.Context) error {
+	_, err := h.validateAndGetUser(c)
+	if err != nil {
+		return err
+	}
+
 	userId := c.Param("userId")
 	page, _ := strconv.Atoi(c.QueryParam("page"))
 	limit, _ := strconv.Atoi(c.QueryParam("limit"))
