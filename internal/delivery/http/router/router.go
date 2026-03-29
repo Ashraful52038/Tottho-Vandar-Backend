@@ -75,7 +75,7 @@ func (r *Router) SetupRoutes(e *echo.Echo) {
 			auth.POST("/register", r.authHandler.Register)
 			auth.POST("/login", r.authHandler.Login)
 			auth.GET("/verify-email", r.authHandler.VerifyEmail)
-			auth.POST("/forgot-password", r.authHandler.ForgotPassword)
+			auth.POST("/forget-password", r.authHandler.ForgotPassword)
 			auth.POST("/reset-password", r.authHandler.ResetPassword)
 		}
 
@@ -172,6 +172,8 @@ func (r *Router) SetupRoutes(e *echo.Echo) {
 				userProfile.POST("/:userId/follow", r.userHandler.FollowUser)
 				userProfile.DELETE("/:userId/follow", r.userHandler.UnfollowUser)
 			}
+
+			protected.POST("/auth/change-password", r.authHandler.ChangePassword)
 		}
 	}
 }

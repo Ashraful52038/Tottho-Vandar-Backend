@@ -153,3 +153,46 @@ func (h *AuthHandler) ResetPassword(c echo.Context) error {
 		"message": "Password reset successfully",
 	})
 }
+
+func (h *AuthHandler) ChangePassword(c echo.Context) error {
+	var req domain.ChangePasswordRequest
+
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"error": "Invalid request body",
+		})
+	}
+
+	// Validate request
+	if err := c.Validate(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"error": err.Error(),
+		})
+	}
+
+	// Get userID from context (set by auth middleware)
+	userID, ok := c.Get("userID").(uint)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, map[string]interface{}{
+			"error": "User not authenticated",
+		})
+	}
+
+	// Call usecase
+	err := h.authUsecase.ChangePassword(
+		c.Request().Context(),
+		userID,
+		req.CurrentPassword,
+		req.NewPassword,
+	)
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"error": err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "Password changed successfully",
+	})
+}

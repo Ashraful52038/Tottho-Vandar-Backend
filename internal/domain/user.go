@@ -92,3 +92,8 @@ type UserProfileResponse struct {
 	CreatedAt time.Time `json:"createdAt"`
 	Stats     UserStats `json:"stats"`
 }
+
+type ChangePasswordRequest struct {
+	CurrentPassword string `json:"currentPassword" validate:"required,min=6"`
+	NewPassword     string `json:"newPassword" validate:"required,min=6"`
+}

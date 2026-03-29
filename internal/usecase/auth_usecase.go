@@ -21,6 +21,7 @@ type AuthUsecase interface {
 	ForgotPassword(ctx context.Context, email string) error
 	ResetPassword(ctx context.Context, token, newPassword string) error
 	GetUserByID(ctx context.Context, id uint) (*domain.User, error)
+	ChangePassword(ctx context.Context, userID uint, currentPassword, newPassword string) error
 }
 
 type authUsecase struct {
@@ -179,4 +180,35 @@ func (u *authUsecase) GetUserByID(ctx context.Context, id uint) (*domain.User, e
 		return nil, err
 	}
 	return user, nil
+}
+
+func (u *authUsecase) ChangePassword(ctx context.Context, userID uint, currentPassword, newPassword string) error {
+	// Get user
+	user, err := u.userRepo.FindByID(ctx, userID)
+	if err != nil {
+		return errors.New("user not found")
+	}
+	if user == nil {
+		return errors.New("user not found")
+	}
+
+	// Verify current password
+	if !hash.CheckPasswordHash(currentPassword, user.Password) {
+		return errors.New("current password is incorrect")
+	}
+
+	// Hash new password
+	hashedPassword, err := hash.HashPassword(newPassword)
+	if err != nil {
+		return errors.New("failed to hash password")
+	}
+
+	// Update password
+	user.Password = string(hashedPassword)
+	err = u.userRepo.Update(ctx, user)
+	if err != nil {
+		return errors.New("failed to update password")
+	}
+
+	return nil
 }
