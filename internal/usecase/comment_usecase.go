@@ -60,8 +60,16 @@ func (u *commentUsecase) Create(ctx context.Context, userID uint, postID uint, c
 	}
 
 	err = u.commentRepo.Create(ctx, comment)
+	if err != nil {
+		return nil, err
+	}
 
-	if err == nil && u.emailQueue != nil {
+	if incErr := u.postRepo.IncrementCommentCount(ctx, postID, 1); incErr != nil {
+		// লগ করো, কিন্তু মূল অপারেশন ব্যর্থ হবে না
+		log.Printf("Failed to increment comment count for post %d: %v", postID, incErr)
+	}
+
+	if u.emailQueue != nil {
 		go u.sendReplyNotification(ctx, post, user, content)
 	}
 
@@ -141,7 +149,16 @@ func (u *commentUsecase) Delete(ctx context.Context, commentID uint, userID uint
 		return errors.New("unauthorized")
 	}
 
-	return u.commentRepo.Delete(ctx, commentID)
+	err = u.commentRepo.Delete(ctx, commentID)
+	if err != nil {
+		return err
+	}
+
+	if decErr := u.postRepo.IncrementCommentCount(ctx, comment.PostID, -1); decErr != nil {
+		log.Printf("Failed to decrement comment count for post %d: %v", comment.PostID, decErr)
+	}
+
+	return nil
 }
 
 func (u *commentUsecase) GetByID(ctx context.Context, id uint) (*domain.Comment, error) {

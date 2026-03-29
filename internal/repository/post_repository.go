@@ -19,6 +19,7 @@ type PostRepository interface {
 	GetPersonalizedFeed(ctx context.Context, userID uint, params *domain.FeedQueryParams) ([]domain.FeedPost, int64, error)
 	GetPublicFeed(ctx context.Context, params *domain.FeedQueryParams) ([]domain.FeedPost, int64, error)
 	CountByUserID(ctx context.Context, userID uint) (int64, error)
+	IncrementCommentCount(ctx context.Context, postID uint, delta int) error
 }
 
 type SearchParams struct {

@@ -426,3 +426,11 @@ func (r *postRepository) CountByUserID(ctx context.Context, userID uint) (int64,
 		Count(&count).Error
 	return count, err
 }
+
+func (r *postRepository) IncrementCommentCount(ctx context.Context, postID uint, delta int) error {
+	return r.db.WithContext(ctx).
+		Model(&domain.Post{}).
+		Where("id = ?", postID).
+		Update("comments", gorm.Expr("comments + ?", delta)).
+		Error
+}
