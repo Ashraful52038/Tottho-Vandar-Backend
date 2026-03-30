@@ -160,6 +160,8 @@ func (h *PostHandler) GetAllPosts(c echo.Context) error {
 		}
 	}
 
+	searchQuery := c.QueryParam("search")
+
 	page, _ := strconv.Atoi(c.QueryParam("page"))
 	if page < 1 {
 		page = 1
@@ -170,10 +172,11 @@ func (h *PostHandler) GetAllPosts(c echo.Context) error {
 		limit = 10
 	}
 
-	if len(tagIDs) > 0 || authorID != nil {
+	if len(tagIDs) > 0 || authorID != nil || searchQuery != "" {
 		params := &repository.SearchParams{
 			TagIDs:   tagIDs,
 			AuthorID: authorID,
+			Query:    searchQuery,
 			Page:     page,
 			Limit:    limit,
 		}

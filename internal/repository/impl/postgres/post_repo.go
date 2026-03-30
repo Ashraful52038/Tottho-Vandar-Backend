@@ -171,13 +171,18 @@ func (r *postRepository) SearchPosts(ctx context.Context, params *repository.Sea
 		Preload("Tags").
 		Where("published = ?", true)
 
-	// Keyword search (title or content)
+	// Keyword search (title, content,author name, tag name)
 	if params.Query != "" {
 		searchTerm := "%" + strings.ToLower(params.Query) + "%"
-		query = query.Where(
-			"LOWER(title) LIKE ? OR LOWER(content) LIKE ?",
-			searchTerm, searchTerm,
-		)
+		query = query.
+			Joins("LEFT JOIN users ON users.id = posts.author_id").
+			Joins("LEFT JOIN post_tags ON post_tags.post_id = posts.id").
+			Joins("LEFT JOIN tags ON tags.id = post_tags.tag_id").
+			Where(
+				"LOWER(posts.title) LIKE ? OR LOWER(posts.content) LIKE ? OR LOWER(users.name) LIKE ? OR LOWER(tags.name) LIKE ?",
+				searchTerm, searchTerm, searchTerm, searchTerm,
+			).
+			Group("posts.id")
 	}
 
 	// Filter by tags
@@ -294,7 +299,6 @@ func (r *postRepository) GetPersonalizedFeed(ctx context.Context, userID uint, p
 		return nil, 0, err
 	}
 
-	// ট্যাগ স্ট্রিং কে অ্যারেতে কনভার্ট - S1009 fix (nil check omitted)
 	for i := range posts {
 		if len(posts[i].Tags) > 0 {
 			posts[i].Tags = strings.Split(posts[i].Tags[0], ",")
@@ -358,7 +362,6 @@ func (r *postRepository) GetPublicFeed(ctx context.Context, params *domain.FeedQ
 		return nil, 0, err
 	}
 
-	// ট্যাগ স্ট্রিং কে অ্যারেতে কনভার্ট - S1009 fix (nil check omitted)
 	for i := range posts {
 		if len(posts[i].Tags) > 0 {
 			posts[i].Tags = strings.Split(posts[i].Tags[0], ",")
@@ -370,7 +373,7 @@ func (r *postRepository) GetPublicFeed(ctx context.Context, params *domain.FeedQ
 	return posts, total, nil
 }
 
-// ToggleFollowTag - ট্যাগ ফলো/আনফলো
+// ToggleFollowTag
 func (r *postRepository) ToggleFollowTag(ctx context.Context, userID, tagID uint) error {
 	var count int64
 	if err := r.db.WithContext(ctx).
@@ -397,7 +400,7 @@ func (r *postRepository) ToggleFollowTag(ctx context.Context, userID, tagID uint
 		}).Error
 }
 
-// GetFollowedTags - ইউজারের ফলো করা ট্যাগ লিস্ট
+// GetFollowedTags
 func (r *postRepository) GetFollowedTags(ctx context.Context, userID uint) ([]domain.Tag, error) {
 	var tags []domain.Tag
 	err := r.db.WithContext(ctx).
