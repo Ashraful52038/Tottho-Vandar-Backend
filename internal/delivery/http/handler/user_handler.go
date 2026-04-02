@@ -3,7 +3,6 @@ package handler
 import (
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/Ashraful52038/tottho-vandar-backend/internal/domain"
 	"github.com/Ashraful52038/tottho-vandar-backend/internal/usecase"
@@ -219,36 +218,21 @@ func (h *UserHandler) GetUserLikes(c echo.Context) error {
 		})
 	}
 
-	// ফ্রন্টএন্ড যেভাবে চায়: { likes: [{ id, post, createdAt }] }
-	type LikedPostResponse struct {
-		ID        uint        `json:"id"`
-		Title     string      `json:"title"`
-		Content   string      `json:"content"`
-		Author    domain.User `json:"author"`
-		CreatedAt time.Time   `json:"createdAt"`
-		Likes     int         `json:"likes"`
-		Comments  int         `json:"comments"`
-	}
-
-	type LikeResponse struct {
-		ID        uint              `json:"id"`
-		Post      LikedPostResponse `json:"post"`
-		CreatedAt time.Time         `json:"createdAt"`
-	}
-
-	responses := make([]LikeResponse, len(likes))
+	responses := make([]domain.LikeResponse, len(likes))
 	for i, like := range likes {
-		responses[i] = LikeResponse{
+		responses[i] = domain.LikeResponse{
 			ID:        like.ID,
 			CreatedAt: like.CreatedAt,
-			Post: LikedPostResponse{
-				ID:        like.Post.ID,
-				Title:     like.Post.Title,
-				Content:   like.Post.Content,
-				Author:    like.Post.Author,
-				CreatedAt: like.Post.CreatedAt,
-				Likes:     like.Post.Likes,
-				Comments:  like.Post.Comments,
+			Post: domain.LikedPostResponse{
+				ID:            like.Post.ID,
+				Title:         like.Post.Title,
+				Content:       like.Post.Content,
+				Author:        like.Post.Author,
+				FeaturedImage: like.Post.FeaturedImage,
+				CoverImage:    like.Post.CoverImage,
+				CreatedAt:     like.Post.CreatedAt,
+				Likes:         like.Post.Likes,
+				Comments:      like.Post.Comments,
 			},
 		}
 	}

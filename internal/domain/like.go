@@ -18,3 +18,21 @@ type Like struct {
 	Post    Post     `json:"post,omitempty" gorm:"foreignKey:PostID"`
 	Comment *Comment `json:"comment,omitempty" gorm:"foreignKey:CommentID"`
 }
+
+type LikedPostResponse struct {
+	ID            uint      `json:"id"`
+	Title         string    `json:"title"`
+	Content       string    `json:"content"`
+	Author        User      `json:"author"`
+	FeaturedImage string    `json:"featuredImage"`
+	CoverImage    string    `json:"coverImage"`
+	CreatedAt     time.Time `json:"createdAt"`
+	Likes         int       `json:"likes"`
+	Comments      int       `json:"comments"`
+}
+
+type LikeResponse struct {
+	ID        uint              `json:"id"`
+	Post      LikedPostResponse `json:"post"`
+	CreatedAt time.Time         `json:"createdAt"`
+}
