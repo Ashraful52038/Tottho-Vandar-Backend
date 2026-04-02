@@ -68,7 +68,6 @@ func (h *UserHandler) UpdateUser(c echo.Context) error {
 
 // Logout handler
 func (h *UserHandler) Logout(c echo.Context) error {
-	// JWT token invalidate করার logic এখানে যোগ করুন
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"message": "Logged out successfully",
 	})
@@ -210,7 +209,6 @@ func (h *UserHandler) GetUserLikes(c echo.Context) error {
 		limit = 10
 	}
 
-	// likeUsecase থেকে ডাটা আনুন (পেজিনেশন ও টোটাল সহ)
 	likes, total, err := h.likeUsecase.GetUserLikes(c.Request().Context(), uint(userID), page, limit)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
@@ -302,7 +300,7 @@ func (h *UserHandler) GetUserFollowing(c echo.Context) error {
 		limit = 20
 	}
 
-	// current user ID (যে রিকোয়েস্ট করছে)
+	// current user ID
 	currentUserID, ok := c.Get("userID").(uint)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, map[string]interface{}{
@@ -328,7 +326,7 @@ func (h *UserHandler) GetUserFollowing(c echo.Context) error {
 func (h *UserHandler) GetFollowStatus(c echo.Context) error {
 	userId := c.Param("userId")
 
-	// JWT থেকে current user id নিন (userID হিসেবে, userId না)
+	//Take current Id from JWT
 	currentUserID, ok := c.Get("userID").(uint)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, map[string]interface{}{
@@ -336,7 +334,6 @@ func (h *UserHandler) GetFollowStatus(c echo.Context) error {
 		})
 	}
 
-	// userId স্ট্রিং থেকে uint এ কনভার্ট করুন
 	targetUserID, err := strconv.ParseUint(userId, 10, 32)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{
@@ -359,7 +356,6 @@ func (h *UserHandler) GetFollowStatus(c echo.Context) error {
 func (h *UserHandler) FollowUser(c echo.Context) error {
 	userId := c.Param("userId")
 
-	// JWT থেকে current user id নিন
 	currentUserID, ok := c.Get("userID").(uint)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, map[string]interface{}{
@@ -367,7 +363,6 @@ func (h *UserHandler) FollowUser(c echo.Context) error {
 		})
 	}
 
-	// userId স্ট্রিং থেকে uint এ কনভার্ট করুন
 	targetUserID, err := strconv.ParseUint(userId, 10, 32)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{
@@ -391,7 +386,6 @@ func (h *UserHandler) FollowUser(c echo.Context) error {
 func (h *UserHandler) UnfollowUser(c echo.Context) error {
 	userId := c.Param("userId")
 
-	// JWT থেকে current user id নিন
 	currentUserID, ok := c.Get("userID").(uint)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, map[string]interface{}{
@@ -399,7 +393,6 @@ func (h *UserHandler) UnfollowUser(c echo.Context) error {
 		})
 	}
 
-	// userId স্ট্রিং থেকে uint এ কনভার্ট করুন
 	targetUserID, err := strconv.ParseUint(userId, 10, 32)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{

@@ -19,7 +19,7 @@ func NewTagHandler(tagUsecase usecase.TagUsecase) *TagHandler {
 	}
 }
 
-// CreateTag handler - নতুন ট্যাগ তৈরি (Admin only)
+// CreateTag handler - (Admin only)
 func (h *TagHandler) CreateTag(c echo.Context) error {
 	// Optional: Check if user is admin
 	userRole, ok := c.Get("userRole").(string)
@@ -53,7 +53,7 @@ func (h *TagHandler) CreateTag(c echo.Context) error {
 	return c.JSON(http.StatusCreated, tag)
 }
 
-// GetTagByID handler - নির্দিষ্ট ট্যাগ দেখুন
+// GetTagByID handler -
 func (h *TagHandler) GetTagByID(c echo.Context) error {
 	tagID, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
@@ -72,7 +72,7 @@ func (h *TagHandler) GetTagByID(c echo.Context) error {
 	return c.JSON(http.StatusOK, tag)
 }
 
-// GetTagBySlug handler - স্লাগ দিয়ে ট্যাগ খুঁজুন
+// GetTagBySlug handler -
 func (h *TagHandler) GetTagBySlug(c echo.Context) error {
 	slug := c.Param("slug")
 	if slug == "" {
@@ -91,7 +91,7 @@ func (h *TagHandler) GetTagBySlug(c echo.Context) error {
 	return c.JSON(http.StatusOK, tag)
 }
 
-// GetAllTags handler - সব ট্যাগের তালিকা (পেজিনেটেড)
+// GetAllTags handler -
 func (h *TagHandler) GetAllTags(c echo.Context) error {
 	page, _ := strconv.Atoi(c.QueryParam("page"))
 	if page < 1 {

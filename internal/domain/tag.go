@@ -17,17 +17,14 @@ type Tag struct {
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
-// CreateTagRequest
 type CreateTagRequest struct {
 	Name string `json:"name" validate:"required,min=2,max=50"`
 }
 
-// UpdateTagRequest
 type UpdateTagRequest struct {
 	Name string `json:"name" validate:"required,min=2,max=50"`
 }
 
-// TagResponse
 type TagResponse struct {
 	ID         uint      `json:"id"`
 	Name       string    `json:"name"`
@@ -37,7 +34,6 @@ type TagResponse struct {
 	UpdatedAt  time.Time `json:"updatedAt"`
 }
 
-// ToResponse - converts Tag to TagResponse
 func (t *Tag) ToResponse() *TagResponse {
 	return &TagResponse{
 		ID:        t.ID,
@@ -48,19 +44,16 @@ func (t *Tag) ToResponse() *TagResponse {
 	}
 }
 
-// BeforeCreate - GORM hook for generating slug
 func (t *Tag) BeforeCreate(tx *gorm.DB) error {
 	t.Slug = generateSlug(t.Name)
 	return nil
 }
 
-// BeforeUpdate - GORM hook for updating slug
 func (t *Tag) BeforeUpdate(tx *gorm.DB) error {
 	t.Slug = generateSlug(t.Name)
 	return nil
 }
 
-// generateSlug - creates URL-friendly slug from name
 func generateSlug(name string) string {
 	slug := strings.ToLower(name)
 	slug = strings.ReplaceAll(slug, " ", "-")
@@ -71,7 +64,6 @@ func generateSlug(name string) string {
 	return slug
 }
 
-// PostTag represents the many-to-many relationship between posts and tags
 type PostTag struct {
 	PostID    uint      `json:"postId" gorm:"primaryKey;constraint:OnDelete:CASCADE;"`
 	TagID     uint      `json:"tagId" gorm:"primaryKey;constraint:OnDelete:CASCADE;"`
@@ -81,7 +73,6 @@ type PostTag struct {
 	Tag  Tag  `json:"-" gorm:"foreignKey:TagID"`
 }
 
-// TableName specifies the custom table name for GORM
 func (PostTag) TableName() string {
 	return "post_tags"
 }

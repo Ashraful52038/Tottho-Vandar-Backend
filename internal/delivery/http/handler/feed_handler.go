@@ -19,17 +19,6 @@ func NewFeedHandler(postUsecase usecase.PostUsecase) *FeedHandler {
 	}
 }
 
-// GetPersonalizedFeed - পার্সোনালাইজড ফিড দেখায়
-// @Summary Get personalized feed
-// @Tags Feed
-// @Accept json
-// @Produce json
-// @Param page query int false "Page number"
-// @Param limit query int false "Items per page"
-// @Param sort_by query string false "Sort by (created_at/likes_count/comments_count)"
-// @Param sort_order query string false "Sort order (asc/desc)"
-// @Success 200 {object} domain.FeedResponse
-// @Router /api/feed [get]
 func (h *FeedHandler) GetPersonalizedFeed(c echo.Context) error {
 	userID, ok := c.Get("userID").(uint)
 	if !ok {
@@ -76,17 +65,6 @@ func (h *FeedHandler) GetPersonalizedFeed(c echo.Context) error {
 	return c.JSON(http.StatusOK, feed)
 }
 
-// GetPublicFeed - পাবলিক ফিড দেখায়
-// @Summary Get public feed
-// @Tags Feed
-// @Accept json
-// @Produce json
-// @Param page query int false "Page number"
-// @Param limit query int false "Items per page"
-// @Param sort_by query string false "Sort by (created_at/likes_count/comments_count)"
-// @Param sort_order query string false "Sort order (asc/desc)"
-// @Success 200 {object} domain.FeedResponse
-// @Router /api/public/feed [get]
 func (h *FeedHandler) GetPublicFeed(c echo.Context) error {
 	// Parse query parameters
 	params := &domain.FeedQueryParams{
@@ -126,14 +104,6 @@ func (h *FeedHandler) GetPublicFeed(c echo.Context) error {
 	return c.JSON(http.StatusOK, feed)
 }
 
-// FollowTag - ট্যাগ ফলো করুন
-// @Summary Follow a tag
-// @Tags Feed
-// @Accept json
-// @Produce json
-// @Param id path int true "Tag ID"
-// @Success 200 {object} map[string]interface{}
-// @Router /api/feed/tags/{id}/follow [post]
 func (h *FeedHandler) FollowTag(c echo.Context) error {
 	userID, ok := c.Get("userID").(uint)
 	if !ok {
@@ -160,14 +130,6 @@ func (h *FeedHandler) FollowTag(c echo.Context) error {
 	})
 }
 
-// UnfollowTag - ট্যাগ আনফলো করুন
-// @Summary Unfollow a tag
-// @Tags Feed
-// @Accept json
-// @Produce json
-// @Param id path int true "Tag ID"
-// @Success 200 {object} map[string]interface{}
-// @Router /api/feed/tags/{id}/unfollow [post]
 func (h *FeedHandler) UnfollowTag(c echo.Context) error {
 	userID, ok := c.Get("userID").(uint)
 	if !ok {
@@ -194,13 +156,6 @@ func (h *FeedHandler) UnfollowTag(c echo.Context) error {
 	})
 }
 
-// GetFollowedTags - ফলো করা ট্যাগের তালিকা
-// @Summary Get user's followed tags
-// @Tags Feed
-// @Accept json
-// @Produce json
-// @Success 200 {array} domain.Tag
-// @Router /api/feed/tags/followed [get]
 func (h *FeedHandler) GetFollowedTags(c echo.Context) error {
 	userID, ok := c.Get("userID").(uint)
 	if !ok {

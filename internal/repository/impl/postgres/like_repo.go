@@ -102,7 +102,6 @@ func (r *likeRepository) FindByUserID(ctx context.Context, userID uint, offset, 
 	var likes []domain.Like
 	var total int64
 
-	// শুধু পোস্ট লাইক কাউন্ট (কমেন্ট লাইক বাদ)
 	err := r.db.WithContext(ctx).
 		Model(&domain.Like{}).
 		Where("user_id = ? AND post_id IS NOT NULL", userID).
@@ -111,12 +110,10 @@ func (r *likeRepository) FindByUserID(ctx context.Context, userID uint, offset, 
 		return nil, 0, err
 	}
 
-	// শুধু পোস্ট লাইক আনুন, কমেন্ট লাইক বাদ
 	err = r.db.WithContext(ctx).
 		Where("user_id = ? AND post_id IS NOT NULL", userID).
 		Preload("Post").
 		Preload("Post.Author").
-		// Preload("Comment") // ← দরকার নেই, সরিয়ে দিন
 		Offset(offset).
 		Limit(limit).
 		Order("created_at desc").

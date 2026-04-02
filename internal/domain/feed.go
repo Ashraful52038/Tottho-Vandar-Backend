@@ -7,8 +7,8 @@ import (
 type FeedQueryParams struct {
 	Page      int    `json:"page" query:"page"`
 	Limit     int    `json:"limit" query:"limit"`
-	SortBy    string `json:"sortBy" query:"sort_by"`       // created_at, likes_count, comments_count
-	SortOrder string `json:"sortOrder" query:"sort_order"` // asc, desc
+	SortBy    string `json:"sortBy" query:"sort_by"`
+	SortOrder string `json:"sortOrder" query:"sort_order"`
 }
 
 type FeedPost struct {
@@ -29,7 +29,6 @@ type FeedPost struct {
 	Published     bool      `json:"published"`
 }
 
-// FeedResponse - ফিড রেসপন্স
 type FeedResponse struct {
 	Posts      []FeedPost `json:"posts"`
 	Total      int64      `json:"total"`

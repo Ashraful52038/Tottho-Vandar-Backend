@@ -10,7 +10,7 @@ type User struct {
 	ID                uint       `json:"id" gorm:"primaryKey"`
 	Name              string     `json:"name" gorm:"not null"`
 	Email             string     `json:"email" gorm:"uniqueIndex;not null"`
-	Password          string     `json:"-" gorm:"not null"` // "-" excludes from JSON
+	Password          string     `json:"-" gorm:"not null"`
 	Verified          bool       `json:"verified" gorm:"default:false"`
 	VerificationToken *string    `json:"-"`
 	ResetToken        *string    `json:"-"`
@@ -49,7 +49,6 @@ type UpdateUserRequest struct {
 	Bio    *string `json:"bio,omitempty"`
 }
 
-// UserResponse - response struct for user (excludes sensitive data)
 type UserResponse struct {
 	ID        uint      `json:"id"`
 	Name      string    `json:"name"`
@@ -59,7 +58,6 @@ type UserResponse struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-// ToResponse - converts User to UserResponse (hides password)
 func (u *User) ToResponse() *UserResponse {
 	if u == nil {
 		return nil
@@ -98,7 +96,6 @@ type ChangePasswordRequest struct {
 	NewPassword     string `json:"newPassword" validate:"required,min=6"`
 }
 
-// UserWithFollowCount - most followed users
 type UserWithFollowCount struct {
 	ID             uint    `json:"id"`
 	Name           string  `json:"name"`

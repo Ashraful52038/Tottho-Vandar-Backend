@@ -69,7 +69,6 @@ func (u *tagUsecase) Create(ctx context.Context, name string) (*domain.Tag, erro
 	return tag, nil
 }
 
-// GetByID - আইডি দিয়ে ট্যাগ খুঁজে বের করা (Comment/Like pattern অনুসারে)
 func (u *tagUsecase) GetByID(ctx context.Context, id uint) (*domain.Tag, error) {
 	tag, err := u.tagRepo.FindByID(ctx, id)
 	if err != nil || tag == nil {
@@ -78,7 +77,6 @@ func (u *tagUsecase) GetByID(ctx context.Context, id uint) (*domain.Tag, error) 
 	return tag, nil
 }
 
-// GetBySlug - স্লাগ দিয়ে ট্যাগ খুঁজে বের করা
 func (u *tagUsecase) GetBySlug(ctx context.Context, slug string) (*domain.Tag, error) {
 	tag, err := u.tagRepo.FindBySlug(ctx, slug)
 	if err != nil || tag == nil {
@@ -87,7 +85,6 @@ func (u *tagUsecase) GetBySlug(ctx context.Context, slug string) (*domain.Tag, e
 	return tag, nil
 }
 
-// GetAll - সব ট্যাগ লিস্ট করা (পেজিনেটেড)
 func (u *tagUsecase) GetAll(ctx context.Context, page, limit int) ([]domain.Tag, int64, error) {
 	if page < 1 {
 		page = 1
@@ -103,7 +100,6 @@ func (u *tagUsecase) GetAll(ctx context.Context, page, limit int) ([]domain.Tag,
 	return tags, total, nil
 }
 
-// GetPopular - জনপ্রিয় ট্যাগ (সবচেয়ে বেশি ব্যবহৃত)
 func (u *tagUsecase) GetPopular(ctx context.Context, limit int) ([]domain.Tag, error) {
 	if limit < 1 || limit > 50 {
 		limit = 10
@@ -116,7 +112,6 @@ func (u *tagUsecase) GetPopular(ctx context.Context, limit int) ([]domain.Tag, e
 	return tags, nil
 }
 
-// GetByPostID - নির্দিষ্ট পোস্টের ট্যাগ লিস্ট (Comment/Like pattern অনুসারে)
 func (u *tagUsecase) GetByPostID(ctx context.Context, postID uint) ([]domain.Tag, error) {
 	// Check if post exists
 	_, err := u.postRepo.FindByID(ctx, postID)
@@ -131,7 +126,6 @@ func (u *tagUsecase) GetByPostID(ctx context.Context, postID uint) ([]domain.Tag
 	return tags, nil
 }
 
-// Update - ট্যাগ আপডেট (Comment/Like pattern অনুসারে)
 func (u *tagUsecase) Update(ctx context.Context, id uint, name string) (*domain.Tag, error) {
 	// Validate name
 	if err := u.validateTagName(name); err != nil {

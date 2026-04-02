@@ -23,9 +23,9 @@ type PostRepository interface {
 }
 
 type SearchParams struct {
-	Query    string `json:"q"`        // keyword search
-	TagIDs   []uint `json:"tagIds"`   // filter by tags
-	AuthorID *uint  `json:"authorId"` // filter by author
+	Query    string `json:"q"`
+	TagIDs   []uint `json:"tagIds"`
+	AuthorID *uint  `json:"authorId"`
 	Page     int    `json:"page"`
 	Limit    int    `json:"limit"`
 }

@@ -10,7 +10,7 @@ import (
 
 // EmailMessage struct
 type EmailMessage struct {
-	Type      string `json:"type"` // verification, reset, reply
+	Type      string `json:"type"`
 	To        string `json:"to"`
 	Username  string `json:"username"`
 	Token     string `json:"token,omitempty"`
@@ -54,8 +54,6 @@ func NewEmailQueueService(emailService *EmailService, rabbitURL string) (*EmailQ
 		return nil, fmt.Errorf("failed to declare queue: %v", err)
 	}
 
-	log.Printf("✅ RabbitMQ connected, queue: %s", queue.Name)
-
 	return &EmailQueueService{
 		emailService: emailService,
 		rabbitConn:   conn,
@@ -82,7 +80,6 @@ func (eq *EmailQueueService) PublishEmail(msg EmailMessage) error {
 		})
 
 	if err != nil {
-		log.Printf("❌ Failed to publish email message: %v", err)
 		return err
 	}
 
@@ -110,7 +107,6 @@ func (eq *EmailQueueService) ConsumeEmails() error {
 		for d := range msgs {
 			var msg EmailMessage
 			if err := json.Unmarshal(d.Body, &msg); err != nil {
-				log.Printf("❌ Error unmarshaling message: %v", err)
 				d.Nack(false, false) // reject, don't requeue
 				continue
 			}
@@ -125,17 +121,14 @@ func (eq *EmailQueueService) ConsumeEmails() error {
 			case "reset":
 				emailErr = eq.emailService.SendResetPasswordEmail(msg.To, msg.Token)
 			case "reply":
-				// SendReplyNotification method তৈরি করতে হবে
 				emailErr = eq.sendReplyNotificationEmail(msg)
 			default:
 				log.Printf("Unknown email type: %s", msg.Type)
 			}
 
 			if emailErr != nil {
-				log.Printf("❌ Failed to send %s email: %v", msg.Type, emailErr)
 				d.Nack(false, true) // requeue
 			} else {
-				log.Printf("✅ %s email sent to %s", msg.Type, msg.To)
 				d.Ack(false) // acknowledge
 			}
 		}

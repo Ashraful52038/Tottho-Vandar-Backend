@@ -230,17 +230,14 @@ func (r *postRepository) GetPersonalizedFeed(ctx context.Context, userID uint, p
 
 	offset := (params.Page - 1) * params.Limit
 
-	// সাব-কোয়েরি: ইউজারের ফলো করা ট্যাগের আইডি
 	followedTags := r.db.Table("user_followed_tags").
 		Select("tag_id").
 		Where("user_id = ?", userID)
 
-	// সাব-কোয়েরি: ইউজারের ফলো করা ইউজারদের আইডি (ফিউচার use-case)
 	followedUsers := r.db.Table("user_followers").
 		Select("following_id").
 		Where("follower_id = ? AND status = 'accepted'", userID)
 
-	// কাউন্ট কোয়েরি
 	countQuery := r.db.WithContext(ctx).
 		Table("posts p").
 		Joins("LEFT JOIN post_tags pt ON pt.post_id = p.id").
@@ -254,7 +251,6 @@ func (r *postRepository) GetPersonalizedFeed(ctx context.Context, userID uint, p
 		return nil, 0, err
 	}
 
-	// সর্ট ফিল্ড নির্ধারণ - QF1003 fix (tagged switch)
 	var sortField string
 	switch params.SortBy {
 	case "likes_count":
@@ -265,7 +261,6 @@ func (r *postRepository) GetPersonalizedFeed(ctx context.Context, userID uint, p
 		sortField = "p.created_at"
 	}
 
-	// মূল ফিড কোয়েরি
 	query := r.db.WithContext(ctx).
 		Table("posts p").
 		Select(`
@@ -317,7 +312,6 @@ func (r *postRepository) GetPublicFeed(ctx context.Context, params *domain.FeedQ
 
 	offset := (params.Page - 1) * params.Limit
 
-	// কাউন্ট
 	if err := r.db.WithContext(ctx).Model(&domain.Post{}).Where("deleted_at IS NULL AND published = ?", true).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
@@ -384,14 +378,12 @@ func (r *postRepository) ToggleFollowTag(ctx context.Context, userID, tagID uint
 	}
 
 	if count > 0 {
-		// আনফলো
 		return r.db.WithContext(ctx).
 			Table("user_followed_tags").
 			Where("user_id = ? AND tag_id = ?", userID, tagID).
 			Delete(nil).Error
 	}
 
-	// ফলো
 	return r.db.WithContext(ctx).
 		Table("user_followed_tags").
 		Create(map[string]interface{}{

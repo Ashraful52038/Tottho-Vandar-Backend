@@ -19,24 +19,21 @@ func NewTagRepository(db *gorm.DB) *tagRepository {
 	}
 }
 
-// Create - নতুন ট্যাগ তৈরি (Like repository pattern)
 func (r *tagRepository) Create(ctx context.Context, tag *domain.Tag) error {
 	tag.CreatedAt = time.Now()
 	tag.UpdatedAt = time.Now()
 	return r.db.WithContext(ctx).Create(tag).Error
 }
 
-// FindByID - আইডি দিয়ে ট্যাগ খুঁজে বের করা (Post repository pattern - nil return)
 func (r *tagRepository) FindByID(ctx context.Context, id uint) (*domain.Tag, error) {
 	var tag domain.Tag
 	err := r.db.WithContext(ctx).First(&tag, id).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil // Post/Like repository মত nil return
+		return nil, nil
 	}
 	return &tag, err
 }
 
-// FindBySlug - স্লাগ দিয়ে ট্যাগ খুঁজে বের করা
 func (r *tagRepository) FindBySlug(ctx context.Context, slug string) (*domain.Tag, error) {
 	var tag domain.Tag
 	err := r.db.WithContext(ctx).Where("slug = ?", slug).First(&tag).Error
@@ -46,7 +43,6 @@ func (r *tagRepository) FindBySlug(ctx context.Context, slug string) (*domain.Ta
 	return &tag, err
 }
 
-// FindByName - নাম দিয়ে ট্যাগ খুঁজে বের করা
 func (r *tagRepository) FindByName(ctx context.Context, name string) (*domain.Tag, error) {
 	var tag domain.Tag
 	err := r.db.WithContext(ctx).Where("name = ?", name).First(&tag).Error
@@ -56,7 +52,6 @@ func (r *tagRepository) FindByName(ctx context.Context, name string) (*domain.Ta
 	return &tag, err
 }
 
-// FindAll - সব ট্যাগ লিস্ট করা (পেজিনেটেড) (Post repository pattern)
 func (r *tagRepository) FindAll(ctx context.Context, page, limit int) ([]domain.Tag, int64, error) {
 	var tags []domain.Tag
 	var total int64
@@ -78,7 +73,7 @@ func (r *tagRepository) FindAll(ctx context.Context, page, limit int) ([]domain.
 	return tags, total, err
 }
 
-// FindPopular - জনপ্রিয় ট্যাগ (সবচেয়ে বেশি ব্যবহৃত)
+// FindPopular
 func (r *tagRepository) FindPopular(ctx context.Context, limit int) ([]domain.Tag, error) {
 	var tags []domain.Tag
 
@@ -94,7 +89,7 @@ func (r *tagRepository) FindPopular(ctx context.Context, limit int) ([]domain.Ta
 	return tags, err
 }
 
-// FindByPostID - নির্দিষ্ট পোস্টের ট্যাগ লিস্ট
+// FindByPostID
 func (r *tagRepository) FindByPostID(ctx context.Context, postID uint) ([]domain.Tag, error) {
 	var tags []domain.Tag
 
@@ -107,18 +102,16 @@ func (r *tagRepository) FindByPostID(ctx context.Context, postID uint) ([]domain
 	return tags, err
 }
 
-// Update - ট্যাগ আপডেট
+// Update
 func (r *tagRepository) Update(ctx context.Context, tag *domain.Tag) error {
 	tag.UpdatedAt = time.Now()
 	return r.db.WithContext(ctx).Save(tag).Error
 }
 
-// Delete - ট্যাগ ডিলিট (soft delete) - Post repository pattern
 func (r *tagRepository) Delete(ctx context.Context, id uint) error {
 	return r.db.WithContext(ctx).Delete(&domain.Tag{}, id).Error
 }
 
-// SyncPostTags - পোস্টের ট্যাগ সিঙ্ক্রোনাইজ করা
 func (r *tagRepository) SyncPostTags(ctx context.Context, postID uint, tagIDs []uint) error {
 	// Start transaction
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
@@ -146,7 +139,7 @@ func (r *tagRepository) SyncPostTags(ctx context.Context, postID uint, tagIDs []
 	})
 }
 
-// GetTagsByPostIDs - একাধিক পোস্টের ট্যাগ একসাথে পাওয়ার জন্য (optional)
+// GetTagsByPostIDs
 func (r *tagRepository) GetTagsByPostIDs(ctx context.Context, postIDs []uint) (map[uint][]domain.Tag, error) {
 	var postTags []struct {
 		PostID uint

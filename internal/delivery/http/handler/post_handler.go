@@ -247,7 +247,7 @@ func (h *PostHandler) SearchPosts(c echo.Context) error {
 	// Parse query parameters
 	query := c.QueryParam("q")
 
-	// Parse tag IDs (comma-separated or multiple)
+	// Parse tag IDs
 	var tagIDs []uint
 	tagParam := c.QueryParam("tagIds")
 	if tagParam != "" {

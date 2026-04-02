@@ -1,4 +1,3 @@
-// internal/repository/follow_repository.go
 package repository
 
 import (

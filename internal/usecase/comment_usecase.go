@@ -65,7 +65,6 @@ func (u *commentUsecase) Create(ctx context.Context, userID uint, postID uint, c
 	}
 
 	if incErr := u.postRepo.IncrementCommentCount(ctx, postID, 1); incErr != nil {
-		// লগ করো, কিন্তু মূল অপারেশন ব্যর্থ হবে না
 		log.Printf("Failed to increment comment count for post %d: %v", postID, incErr)
 	}
 
@@ -88,14 +87,8 @@ func (u *commentUsecase) sendReplyNotification(ctx context.Context, post *domain
 		return
 	}
 
-	// notification preference চেক করুন (future use)
-	// if !postAuthor.NotificationsEnabled {
-	//     return
-	// }
-
 	log.Printf("Sending reply notification to %s about comment from %s", postAuthor.Email, commenter.Name)
 
-	// EmailQueueService এর মাধ্যমে notification পাঠান
 	if u.emailQueue != nil {
 		msg := email.EmailMessage{
 			Type:      "reply",

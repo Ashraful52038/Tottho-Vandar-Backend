@@ -272,7 +272,7 @@ func (u *postUsecase) GetByTags(ctx context.Context, tagIDs []uint, page, limit 
 	return u.postRepo.SearchByTags(ctx, tagIDs, page, limit)
 }
 
-// ✅ SearchPosts implementation
+// SearchPosts implementation
 func (u *postUsecase) SearchPosts(ctx context.Context, params *repository.SearchParams) ([]domain.Post, int64, error) {
 	// Validate pagination
 	if params.Page < 1 {
@@ -336,7 +336,7 @@ func (u *postUsecase) GetPersonalizedFeed(ctx context.Context, userID uint, para
 	return response, nil
 }
 
-// GetPublicFeed - পাবলিক ফিড
+// GetPublicFeed
 func (u *postUsecase) GetPublicFeed(ctx context.Context, params *domain.FeedQueryParams) (*domain.FeedResponse, error) {
 
 	if params.Page < 1 {

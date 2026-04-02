@@ -83,7 +83,6 @@ func (u *userUsecase) GetUserProfile(ctx context.Context, userID uint) (*domain.
 		return nil, errors.New("user not found")
 	}
 
-	// কাউন্ট গুলো বের করুন
 	postsCount, _ := u.postRepo.CountByUserID(ctx, userID)
 	commentsCount, _ := u.commentRepo.CountByUserID(ctx, userID)
 	likesCount, _ := u.likeRepo.CountByUserID(ctx, userID)
@@ -174,7 +173,6 @@ func (u *userUsecase) GetFollowers(ctx context.Context, userID string, currentUs
 		return nil, 0, err
 	}
 
-	// প্রত্যেক follower-এর জন্য isFollowing স্ট্যাটাস চেক করুন
 	for i := range followers {
 		isFollowing, _ := u.followRepo.CheckFollowStatus(ctx, currentUserID, followers[i].ID)
 		followers[i].IsFollowing = isFollowing
@@ -195,7 +193,6 @@ func (u *userUsecase) GetFollowing(ctx context.Context, userID string, currentUs
 		return nil, 0, err
 	}
 
-	// currentUser এই people-কে follow করে কিনা চেক করুন
 	for i := range following {
 		isFollowing, _ := u.followRepo.CheckFollowStatus(ctx, currentUserID, following[i].ID)
 		following[i].IsFollowing = isFollowing
@@ -204,19 +201,16 @@ func (u *userUsecase) GetFollowing(ctx context.Context, userID string, currentUs
 	return following, total, nil
 }
 
-// CheckFollowStatus - ফলো স্ট্যাটাস চেক করা
 func (u *userUsecase) CheckFollowStatus(ctx context.Context, currentUserID, targetUserID uint) (bool, error) {
 	return u.followRepo.CheckFollowStatus(ctx, currentUserID, targetUserID)
 }
 
-// FollowUser - ইউজারকে ফলো করা
 func (u *userUsecase) FollowUser(ctx context.Context, currentUserID, targetUserID uint) error {
 
 	if currentUserID == 0 || targetUserID == 0 {
 		return errors.New("invalid user ids")
 	}
 
-	// নিজেকে ফলো করা যাবে না
 	if currentUserID == targetUserID {
 		return errors.New("you cannot follow yourself")
 	}
@@ -226,7 +220,6 @@ func (u *userUsecase) FollowUser(ctx context.Context, currentUserID, targetUserI
 		return errors.New("target user not found")
 	}
 
-	// ইতিমধ্যে ফলো করা আছে কিনা চেক করুন
 	isFollowing, err := u.followRepo.CheckFollowStatus(ctx, currentUserID, targetUserID)
 	if err != nil {
 		return err
@@ -239,14 +232,12 @@ func (u *userUsecase) FollowUser(ctx context.Context, currentUserID, targetUserI
 	return u.followRepo.Follow(ctx, currentUserID, targetUserID)
 }
 
-// UnfollowUser - ইউজারকে আনফলো করা
 func (u *userUsecase) UnfollowUser(ctx context.Context, currentUserID, targetUserID uint) error {
 
 	if currentUserID == 0 || targetUserID == 0 {
 		return errors.New("invalid user ids")
 	}
 
-	// ফলো করা আছে কিনা চেক করুন
 	isFollowing, err := u.followRepo.CheckFollowStatus(ctx, currentUserID, targetUserID)
 	if err != nil {
 		return err

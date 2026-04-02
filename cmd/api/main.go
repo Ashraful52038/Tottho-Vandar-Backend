@@ -38,15 +38,14 @@ func main() {
 	jwtService := jwt.NewJWTService(cfg.JWTSecret, time.Hour*24)
 
 	emailService := email.NewEmailService(
-		cfg.SMTPHost,     // "localhost"
-		cfg.SMTPPort,     // "1025"
-		cfg.SMTPUsername, // ""
-		cfg.SMTPPassword, // ""
-		cfg.EmailFrom,    // "noreply@totthovandar.com"
+		cfg.SMTPHost,
+		cfg.SMTPPort,
+		cfg.SMTPUsername,
+		cfg.SMTPPassword,
+		cfg.EmailFrom,
 	)
 
 	var emailQueue *email.EmailQueueService = nil
-	// emailQueue, _ = email.NewEmailQueueService(emailService, "amqp://guest:guest@localhost:5672/")
 
 	// Initialize usecases
 	authUsecase := usecase.NewAuthUsecase(userRepo, jwtService, emailService)

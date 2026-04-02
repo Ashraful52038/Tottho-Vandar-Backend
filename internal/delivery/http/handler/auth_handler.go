@@ -27,7 +27,6 @@ func (h *AuthHandler) Register(c echo.Context) error {
 		})
 	}
 
-	// Validate request
 	if err := c.Validate(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{
 			"error": err.Error(),
@@ -53,7 +52,6 @@ func (h *AuthHandler) Login(c echo.Context) error {
 		})
 	}
 
-	// Validate request
 	if err := c.Validate(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{
 			"error": err.Error(),
@@ -103,7 +101,6 @@ func (h *AuthHandler) ForgotPassword(c echo.Context) error {
 		})
 	}
 
-	// Validate request
 	if err := c.Validate(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{
 			"error": err.Error(),
@@ -135,7 +132,6 @@ func (h *AuthHandler) ResetPassword(c echo.Context) error {
 		})
 	}
 
-	// Validate request
 	if err := c.Validate(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{
 			"error": err.Error(),
@@ -163,7 +159,6 @@ func (h *AuthHandler) ChangePassword(c echo.Context) error {
 		})
 	}
 
-	// Validate request
 	if err := c.Validate(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{
 			"error": err.Error(),
@@ -178,7 +173,6 @@ func (h *AuthHandler) ChangePassword(c echo.Context) error {
 		})
 	}
 
-	// Call usecase
 	err := h.authUsecase.ChangePassword(
 		c.Request().Context(),
 		userID,

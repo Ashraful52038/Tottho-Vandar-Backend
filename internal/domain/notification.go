@@ -1,4 +1,3 @@
-// internal/domain/notification.go
 package domain
 
 import (
