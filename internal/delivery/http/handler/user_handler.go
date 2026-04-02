@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/Ashraful52038/tottho-vandar-backend/internal/domain"
 	"github.com/Ashraful52038/tottho-vandar-backend/internal/usecase"
@@ -11,11 +12,13 @@ import (
 
 type UserHandler struct {
 	userUsecase usecase.UserUsecase
+	likeUsecase usecase.LikeUsecase
 }
 
-func NewUserHandler(userUsecase usecase.UserUsecase) *UserHandler {
+func NewUserHandler(userUsecase usecase.UserUsecase, likeUsecase usecase.LikeUsecase) *UserHandler {
 	return &UserHandler{
 		userUsecase: userUsecase,
+		likeUsecase: likeUsecase,
 	}
 }
 
@@ -192,25 +195,66 @@ func (h *UserHandler) GetUserComments(c echo.Context) error {
 
 func (h *UserHandler) GetUserLikes(c echo.Context) error {
 	userId := c.Param("userId")
-	page, _ := strconv.Atoi(c.QueryParam("page"))
-	limit, _ := strconv.Atoi(c.QueryParam("limit"))
+	userID, err := strconv.ParseUint(userId, 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"error": "invalid user id",
+		})
+	}
 
+	page, _ := strconv.Atoi(c.QueryParam("page"))
 	if page < 1 {
 		page = 1
 	}
+	limit, _ := strconv.Atoi(c.QueryParam("limit"))
 	if limit < 1 {
 		limit = 10
 	}
 
-	likes, total, err := h.userUsecase.GetUserLikes(c.Request().Context(), userId, page, limit)
+	// likeUsecase থেকে ডাটা আনুন (পেজিনেশন ও টোটাল সহ)
+	likes, total, err := h.likeUsecase.GetUserLikes(c.Request().Context(), uint(userID), page, limit)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
 			"error": err.Error(),
 		})
 	}
 
+	// ফ্রন্টএন্ড যেভাবে চায়: { likes: [{ id, post, createdAt }] }
+	type LikedPostResponse struct {
+		ID        uint        `json:"id"`
+		Title     string      `json:"title"`
+		Content   string      `json:"content"`
+		Author    domain.User `json:"author"`
+		CreatedAt time.Time   `json:"createdAt"`
+		Likes     int         `json:"likes"`
+		Comments  int         `json:"comments"`
+	}
+
+	type LikeResponse struct {
+		ID        uint              `json:"id"`
+		Post      LikedPostResponse `json:"post"`
+		CreatedAt time.Time         `json:"createdAt"`
+	}
+
+	responses := make([]LikeResponse, len(likes))
+	for i, like := range likes {
+		responses[i] = LikeResponse{
+			ID:        like.ID,
+			CreatedAt: like.CreatedAt,
+			Post: LikedPostResponse{
+				ID:        like.Post.ID,
+				Title:     like.Post.Title,
+				Content:   like.Post.Content,
+				Author:    like.Post.Author,
+				CreatedAt: like.Post.CreatedAt,
+				Likes:     like.Post.Likes,
+				Comments:  like.Post.Comments,
+			},
+		}
+	}
+
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"likes": likes,
+		"likes": responses,
 		"total": total,
 		"page":  page,
 		"limit": limit,

@@ -58,7 +58,7 @@ func main() {
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(authUsecase)
-	userHandler := handler.NewUserHandler(userUsecase)
+	userHandler := handler.NewUserHandler(userUsecase, likeUsecase)
 	postHandler := handler.NewPostHandler(postUsecase)
 	commentHandler := handler.NewCommentHandler(commentUsecase, likeUsecase)
 	likeHandler := handler.NewLikeHandler(likeUsecase, postUsecase, commentUsecase)

@@ -13,7 +13,7 @@ type LikeUsecase interface {
 	ToggleCommentLike(ctx context.Context, userID uint, commentID uint) (*domain.Like, error)
 	GetPostLikes(ctx context.Context, postID uint) ([]domain.Like, error)
 	GetPostLikesCount(ctx context.Context, postID uint) (int64, error)
-	GetUserLikes(ctx context.Context, userID uint) ([]domain.Like, error)
+	GetUserLikes(ctx context.Context, userID uint, page, limit int) ([]domain.Like, int64, error)
 	GetCommentLikes(ctx context.Context, commentID uint) ([]domain.Like, error)
 	GetCommentLikesCount(ctx context.Context, commentID uint) (int64, error)
 	CheckUserLikedComment(ctx context.Context, userID uint, commentID uint) (bool, error)
@@ -154,17 +154,13 @@ func (u *likeUsecase) GetPostLikesCount(ctx context.Context, postID uint) (int64
 }
 
 // GetUserLikes
-func (u *likeUsecase) GetUserLikes(ctx context.Context, userID uint) ([]domain.Like, error) {
+func (u *likeUsecase) GetUserLikes(ctx context.Context, userID uint, page, limit int) ([]domain.Like, int64, error) {
 	if err := u.validateUser(ctx, userID); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-
-	likes, _, err := u.likeRepo.FindByUserID(ctx, userID, 0, 1000) // offset 0, limit 1000
-	if err != nil {
-		return nil, err
-	}
-
-	return likes, nil
+	offset := (page - 1) * limit
+	likes, total, err := u.likeRepo.FindByUserID(ctx, userID, offset, limit)
+	return likes, total, err
 }
 
 // validateUser
