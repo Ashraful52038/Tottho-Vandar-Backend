@@ -97,3 +97,12 @@ type ChangePasswordRequest struct {
 	CurrentPassword string `json:"currentPassword" validate:"required,min=6"`
 	NewPassword     string `json:"newPassword" validate:"required,min=6"`
 }
+
+// UserWithFollowCount - most followed users
+type UserWithFollowCount struct {
+	ID             uint    `json:"id"`
+	Name           string  `json:"name"`
+	Avatar         *string `json:"avatar"`
+	Bio            *string `json:"bio"`
+	FollowersCount int     `json:"followersCount"`
+}

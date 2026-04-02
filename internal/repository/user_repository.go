@@ -17,4 +17,5 @@ type UserRepository interface {
 	Delete(ctx context.Context, id uint) error
 	VerifyEmail(ctx context.Context, userID uint) error
 	SetResetToken(ctx context.Context, userID uint, token string, expiry time.Time) error
+	FindMostFollowed(ctx context.Context, limit int) ([]domain.UserWithFollowCount, error)
 }

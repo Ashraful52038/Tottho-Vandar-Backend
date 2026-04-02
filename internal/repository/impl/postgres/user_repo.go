@@ -79,3 +79,17 @@ func (r *userRepository) SetResetToken(ctx context.Context, userID uint, token s
 			"reset_token_expiry": expiry,
 		}).Error
 }
+
+func (r *userRepository) FindMostFollowed(ctx context.Context, limit int) ([]domain.UserWithFollowCount, error) {
+	var users []domain.UserWithFollowCount
+	err := r.db.WithContext(ctx).
+		Table("users").
+		Select("users.id, users.name, users.avatar, users.bio, COUNT(f.follower_id) as followers_count").
+		Joins("LEFT JOIN followers f ON f.following_id = users.id AND f.status = 'accepted'").
+		Where("users.deleted_at IS NULL").
+		Group("users.id").
+		Order("followers_count DESC, users.created_at ASC").
+		Limit(limit).
+		Scan(&users).Error
+	return users, err
+}
