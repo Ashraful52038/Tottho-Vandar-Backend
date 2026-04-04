@@ -15,7 +15,7 @@ services:
     networks:
       tottho-network:
         aliases:
-          - postgres  # ✅ এই alias টি যোগ করুন
+          - postgres 
     restart: unless-stopped
 
   pgadmin:
@@ -35,7 +35,7 @@ services:
       - postgres
     restart: unless-stopped
     dns:
-      - 8.8.8.8  # ✅ DNS সার্ভার যোগ করুন
+      - 8.8.8.8
       - 8.8.4.4
 
 volumes:
