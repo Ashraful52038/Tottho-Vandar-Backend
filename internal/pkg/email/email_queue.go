@@ -146,11 +146,11 @@ Hello %s,
 %s replied to your comment:
 "%s"
 
-View the conversation: http://localhost:3000/posts/%d
+View the conversation: %s/posts/%d
 
 ---
 You're receiving this because you have notifications enabled.
-`, msg.Username, msg.Commenter, msg.Content, msg.PostID)
+`, msg.Username, msg.Commenter, msg.Content, eq.emailService.frontendURL, msg.PostID)
 
 	return eq.emailService.sendEmail(msg.To, subject, body)
 }
