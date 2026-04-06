@@ -16,6 +16,7 @@ type Router struct {
 	tagHandler     *handler.TagHandler
 	jwtService     *jwt.JWTService
 	uploadHandler  *handler.UploadHandler
+	allowedOrigins []string
 }
 
 func NewRouter(
@@ -28,6 +29,7 @@ func NewRouter(
 	feedHandler *handler.FeedHandler,
 	jwtService *jwt.JWTService,
 	uploadHandler *handler.UploadHandler,
+	allowedOrigins []string,
 ) *Router {
 	return &Router{
 		authHandler:    authHandler,
@@ -39,13 +41,14 @@ func NewRouter(
 		feedHandler:    feedHandler,
 		jwtService:     jwtService,
 		uploadHandler:  uploadHandler,
+		allowedOrigins: allowedOrigins,
 	}
 }
 
 func (r *Router) SetupRoutes(e *echo.Echo) {
 	// Setup middleware and get groups
 	api := e.Group("/api")
-	protected := setupMiddleware(e, r.jwtService)
+	protected := setupMiddleware(e, r.jwtService, r.allowedOrigins)
 
 	// Public routes
 	setupAuthRoutes(api, r.authHandler)

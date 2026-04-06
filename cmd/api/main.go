@@ -43,6 +43,7 @@ func main() {
 		cfg.SMTPUsername,
 		cfg.SMTPPassword,
 		cfg.EmailFrom,
+		cfg.FrontendURL,
 	)
 
 	var emailQueue *email.EmailQueueService = nil
@@ -63,7 +64,7 @@ func main() {
 	likeHandler := handler.NewLikeHandler(likeUsecase, postUsecase, commentUsecase)
 	tagHandler := handler.NewTagHandler(tagUsecase)
 	feedHandler := handler.NewFeedHandler(postUsecase)
-	uploadHandler := handler.NewUploadHandler()
+	uploadHandler := handler.NewUploadHandler(cfg.BackendURL)
 
 	// Initialize Echo
 	e := echo.New()
@@ -82,6 +83,7 @@ func main() {
 		feedHandler,
 		jwtService,
 		uploadHandler,
+		[]string{cfg.FrontendURL},
 	)
 	router.SetupRoutes(e)
 

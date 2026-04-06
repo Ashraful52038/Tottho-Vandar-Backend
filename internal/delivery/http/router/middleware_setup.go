@@ -7,13 +7,13 @@ import (
 	echomiddleware "github.com/labstack/echo/v4/middleware"
 )
 
-func setupMiddleware(e *echo.Echo, jwtService *jwt.JWTService) *echo.Group {
+func setupMiddleware(e *echo.Echo, jwtService *jwt.JWTService, allowedOrigins []string) *echo.Group {
 	// Middleware
 	e.Use(echomiddleware.Logger())
 	e.Use(echomiddleware.Recover())
 
 	e.Use(echomiddleware.CORSWithConfig(echomiddleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost:3000"},
+		AllowOrigins: allowedOrigins,
 		AllowMethods: []string{echo.GET, echo.POST, echo.PUT, echo.DELETE, echo.OPTIONS},
 		AllowHeaders: []string{
 			echo.HeaderOrigin,
