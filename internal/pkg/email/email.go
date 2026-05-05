@@ -56,22 +56,16 @@ You're receiving this because you have notifications enabled.
 }
 
 func (s *EmailService) sendEmail(to, subject, body string) error {
-	// SMTP connection
-	// auth := smtp.PlainAuth("", s.username, s.password, s.host)
 	addr := fmt.Sprintf("%s:%s", s.host, s.port)
 
 	var auth smtp.Auth = nil
-
-	log.Printf("📧 Sending email to: %s", to)
-	log.Printf("📧 Subject: %s", subject)
-	log.Printf("📧 Body: %s", body)
 
 	if s.username != "" && s.password != "" && s.host != "localhost" {
 		auth = smtp.PlainAuth("", s.username, s.password, s.host)
 	}
 
 	// Email message
-	msg := []byte(fmt.Sprintf("To: %s\r\nSubject: %s\r\n\r\n%s", to, subject, body))
+	msg := []byte(fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n%s", s.from, to, subject, body))
 
 	// Send email
 	err := smtp.SendMail(addr, auth, s.from, []string{to}, msg)

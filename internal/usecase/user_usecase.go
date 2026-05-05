@@ -20,6 +20,7 @@ type UserUsecase interface {
 	CheckFollowStatus(ctx context.Context, currentUserID, targetUserID uint) (bool, error)
 	FollowUser(ctx context.Context, currentUserID, targetUserID uint) error
 	UnfollowUser(ctx context.Context, currentUserID, targetUserID uint) error
+	GetMostFollowedUsers(ctx context.Context, limit int) ([]domain.UserWithFollowCount, error)
 }
 
 type userUsecase struct {
@@ -247,4 +248,8 @@ func (u *userUsecase) UnfollowUser(ctx context.Context, currentUserID, targetUse
 	}
 
 	return u.followRepo.Unfollow(ctx, currentUserID, targetUserID)
+}
+
+func (u *userUsecase) GetMostFollowedUsers(ctx context.Context, limit int) ([]domain.UserWithFollowCount, error) {
+	return u.userRepo.FindMostFollowed(ctx, limit)
 }
