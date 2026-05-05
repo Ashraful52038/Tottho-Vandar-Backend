@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"errors"
+	"log"
 	"time"
 
 	"github.com/Ashraful52038/tottho-vandar-backend/internal/domain"
@@ -82,14 +83,26 @@ func (r *userRepository) SetResetToken(ctx context.Context, userID uint, token s
 
 func (r *userRepository) FindMostFollowed(ctx context.Context, limit int) ([]domain.UserWithFollowCount, error) {
 	var users []domain.UserWithFollowCount
-	err := r.db.WithContext(ctx).
-		Table("users").
-		Select("users.id, users.name, users.avatar, users.bio, COUNT(f.follower_id) as followers_count").
-		Joins("LEFT JOIN followers f ON f.following_id = users.id AND f.status = 'accepted'").
-		Where("users.deleted_at IS NULL").
-		Group("users.id").
-		Order("followers_count DESC, users.created_at ASC").
-		Limit(limit).
-		Scan(&users).Error
-	return users, err
+
+	query := `
+        SELECT 
+            u.id, 
+            u.name, 
+            COALESCE(u.avatar, '') as avatar, 
+            COALESCE(u.bio, '') as bio, 
+            COUNT(f.follower_id) as followers_count
+        FROM users u
+        LEFT JOIN follows f ON f.following_id = u.id
+        GROUP BY u.id, u.name, u.avatar, u.bio
+        ORDER BY followers_count DESC, u.created_at ASC
+        LIMIT $1
+    `
+
+	err := r.db.WithContext(ctx).Raw(query, limit).Scan(&users).Error
+	if err != nil {
+		log.Printf("FindMostFollowed error: %v", err)
+		return nil, err
+	}
+
+	return users, nil
 }

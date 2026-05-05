@@ -190,3 +190,29 @@ func (h *AuthHandler) ChangePassword(c echo.Context) error {
 		"message": "Password changed successfully",
 	})
 }
+
+// ResendVerification handler
+func (h *AuthHandler) ResendVerification(c echo.Context) error {
+	var req struct {
+		Email string `json:"email" validate:"required,email"`
+	}
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"error": "Invalid request body",
+		})
+	}
+	if err := c.Validate(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"error": err.Error(),
+		})
+	}
+	err := h.authUsecase.ResendVerificationEmail(c.Request().Context(), req.Email)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"error": err.Error(),
+		})
+	}
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "Verification email sent",
+	})
+}

@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"log"
 	"time"
 
 	"github.com/Ashraful52038/tottho-vandar-backend/internal/domain"
@@ -22,6 +23,7 @@ type AuthUsecase interface {
 	ResetPassword(ctx context.Context, token, newPassword string) error
 	GetUserByID(ctx context.Context, id uint) (*domain.User, error)
 	ChangePassword(ctx context.Context, userID uint, currentPassword, newPassword string) error
+	ResendVerificationEmail(ctx context.Context, email string) error
 }
 
 type authUsecase struct {
@@ -73,7 +75,11 @@ func (u *authUsecase) Register(ctx context.Context, req *domain.RegisterRequest)
 	}
 
 	// Send verification email
-	go u.emailService.SendVerificationEmail(user.Email, verificationToken)
+	go func() {
+		if err := u.emailService.SendVerificationEmail(user.Email, verificationToken); err != nil {
+			log.Printf("Register: failed to send verification email to %s: %v", user.Email, err)
+		}
+	}()
 
 	// Generate JWT
 	token, err := u.jwtService.GenerateToken(user)
@@ -210,5 +216,32 @@ func (u *authUsecase) ChangePassword(ctx context.Context, userID uint, currentPa
 		return errors.New("failed to update password")
 	}
 
+	return nil
+}
+
+func (u *authUsecase) ResendVerificationEmail(ctx context.Context, email string) error {
+	// ইউজার খুঁজুন
+	user, err := u.userRepo.FindByEmail(ctx, email)
+	if err != nil || user == nil {
+		return errors.New("user not found")
+	}
+	// যদি ইতিমধ্যে ভেরিফাই করা হয়ে থাকে
+	if user.Verified {
+		return errors.New("email already verified")
+	}
+	// নতুন টোকেন জেনারেট করুন
+	newToken := generateToken()
+	user.VerificationToken = &newToken
+	err = u.userRepo.Update(ctx, user)
+	if err != nil {
+		return err
+	}
+	// ইমেইল পাঠান (এরর লগ করবেন কিন্তু ফিরিয়ে দেবেন না)
+	go func() {
+		if err := u.emailService.SendVerificationEmail(user.Email, newToken); err != nil {
+			// লগ করার জন্য log প্যাকেজ ইমপোর্ট করতে হবে
+			log.Printf("ResendVerificationEmail: failed to send to %s: %v", user.Email, err)
+		}
+	}()
 	return nil
 }

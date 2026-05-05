@@ -1,8 +1,13 @@
 package handler
 
 import (
+	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
+	"time"
 
 	"github.com/Ashraful52038/tottho-vandar-backend/internal/domain"
 	"github.com/Ashraful52038/tottho-vandar-backend/internal/usecase"
@@ -410,5 +415,117 @@ func (h *UserHandler) UnfollowUser(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"message":   "unfollowed successfully",
 		"following": false,
+	})
+}
+
+func (h *UserHandler) GetMostFollowedUsers(c echo.Context) error {
+	limit, _ := strconv.Atoi(c.QueryParam("limit"))
+	if limit < 1 || limit > 20 {
+		limit = 10
+	}
+
+	if limit > 20 {
+		limit = 20
+	}
+
+	users, err := h.userUsecase.GetMostFollowedUsers(c.Request().Context(), limit)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error": err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, users)
+}
+
+// UploadAvatar handles avatar image upload
+func (h *UserHandler) UploadAvatar(c echo.Context) error {
+	// Get user ID from context (JWT middleware থেকে আসবে)
+	userID, ok := c.Get("userID").(uint)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, map[string]interface{}{
+			"error": "user not authenticated",
+		})
+	}
+
+	// Get file from request
+	file, err := c.FormFile("avatar")
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"error": "No file uploaded",
+		})
+	}
+
+	// Check file size (max 5MB)
+	if file.Size > 5*1024*1024 {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"error": "File too large. Maximum size is 5MB",
+		})
+	}
+
+	// Check file type
+	fileType := file.Header.Get("Content-Type")
+	if fileType != "image/jpeg" && fileType != "image/png" && fileType != "image/jpg" && fileType != "image/webp" {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"error": "Only image files (JPEG, PNG, WEBP) are allowed",
+		})
+	}
+
+	// Open file
+	src, err := file.Open()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error": "Failed to open file",
+		})
+	}
+	defer src.Close()
+
+	// Create unique filename
+	timestamp := time.Now().Unix()
+	filename := fmt.Sprintf("avatar_%d_%s", timestamp, file.Filename)
+
+	// Create directory if not exists
+	uploadDir := "uploads/avatars"
+	if err := os.MkdirAll(uploadDir, os.ModePerm); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error": "Failed to create upload directory",
+		})
+	}
+
+	// Create destination file
+	filePath := filepath.Join(uploadDir, filename)
+	dst, err := os.Create(filePath)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error": "Failed to create file",
+		})
+	}
+	defer dst.Close()
+
+	// Copy file
+	if _, err = io.Copy(dst, src); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error": "Failed to save file",
+		})
+	}
+
+	// Generate avatar URL
+	avatarURL := fmt.Sprintf("/uploads/avatars/%s", filename)
+
+	// Update user in database using userUsecase
+	updateReq := &domain.UpdateUserRequest{
+		Avatar: &avatarURL,
+	}
+
+	updatedUser, err := h.userUsecase.Update(c.Request().Context(), userID, updateReq)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error": "Failed to update user avatar",
+		})
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"avatarUrl": updatedUser.Avatar,
+		"message":   "Avatar uploaded successfully",
 	})
 }

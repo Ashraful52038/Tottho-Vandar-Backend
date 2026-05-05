@@ -47,6 +47,7 @@ type UpdateUserRequest struct {
 	Name   *string `json:"name,omitempty"`
 	Avatar *string `json:"avatar,omitempty"`
 	Bio    *string `json:"bio,omitempty"`
+	Email  *string `json:"email,omitempty"`
 }
 
 type UserResponse struct {
@@ -97,9 +98,9 @@ type ChangePasswordRequest struct {
 }
 
 type UserWithFollowCount struct {
-	ID             uint    `json:"id"`
-	Name           string  `json:"name"`
-	Avatar         *string `json:"avatar"`
-	Bio            *string `json:"bio"`
-	FollowersCount int     `json:"followersCount"`
+	ID             uint   `json:"id"`
+	Name           string `json:"name"`
+	Avatar         string `json:"avatar,omitempty"`
+	Bio            string `json:"bio,omitempty"`
+	FollowersCount int    `json:"followersCount"`
 }

@@ -77,6 +77,7 @@ func (r *Router) SetupRoutes(e *echo.Echo) {
 			auth.GET("/verify-email", r.authHandler.VerifyEmail)
 			auth.POST("/forget-password", r.authHandler.ForgotPassword)
 			auth.POST("/reset-password", r.authHandler.ResetPassword)
+			auth.POST("/resend-verification", r.authHandler.ResendVerification)
 		}
 
 		// Public Feed Route
@@ -98,6 +99,9 @@ func (r *Router) SetupRoutes(e *echo.Echo) {
 		// PUBLIC like routes
 		api.GET("/likes/posts/:postId", r.likeHandler.GetPostLikes)
 		api.GET("/likes/comments/:commentId", r.likeHandler.GetCommentLikes)
+
+		// Public user routes
+		api.GET("/users/most-followed", r.userHandler.GetMostFollowedUsers)
 
 		// Protected routes
 		protected := api.Group("")
@@ -157,6 +161,7 @@ func (r *Router) SetupRoutes(e *echo.Echo) {
 			upload := protected.Group("/upload")
 			{
 				upload.POST("/image", r.uploadHandler.UploadImage)
+				upload.POST("/avatar", r.userHandler.UploadAvatar)
 			}
 
 			userProfile := protected.Group("/users")
