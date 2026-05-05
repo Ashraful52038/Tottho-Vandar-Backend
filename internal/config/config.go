@@ -34,6 +34,9 @@ type Config struct {
 
 	// Frontend
 	FrontendURL string
+
+	// Backend
+	BackendURL string
 }
 
 func New() *Config {
@@ -70,6 +73,9 @@ func New() *Config {
 
 		// Frontend
 		FrontendURL: getEnv("FRONTEND_URL", "http://localhost:3000"),
+
+		// Backend
+		BackendURL: getEnv("BACKEND_URL", "http://localhost:8080"),
 	}
 }
 

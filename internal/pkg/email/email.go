@@ -7,32 +7,34 @@ import (
 )
 
 type EmailService struct {
-	from     string
-	host     string
-	port     string
-	username string
-	password string
+	from        string
+	host        string
+	port        string
+	username    string
+	password    string
+	frontendURL string
 }
 
-func NewEmailService(host, port, username, password, from string) *EmailService {
+func NewEmailService(host, port, username, password, from, frontendURL string) *EmailService {
 	return &EmailService{
-		host:     host,
-		port:     port,
-		username: username,
-		password: password,
-		from:     from,
+		host:        host,
+		port:        port,
+		username:    username,
+		password:    password,
+		from:        from,
+		frontendURL: frontendURL,
 	}
 }
 
 func (s *EmailService) SendVerificationEmail(to, token string) error {
 	subject := "Email Verification"
-	body := fmt.Sprintf("Please verify your email using this link: http://localhost:3000/verify-email?token=%s", token)
+	body := fmt.Sprintf("Please verify your email using this link: %s/verify-email?token=%s", s.frontendURL, token)
 	return s.sendEmail(to, subject, body)
 }
 
 func (s *EmailService) SendResetPasswordEmail(to, token string) error {
 	subject := "Password Reset"
-	body := fmt.Sprintf("Reset your password using this link: http://localhost:3000/reset-password?token=%s", token)
+	body := fmt.Sprintf("Reset your password using this link: %s/reset-password?token=%s", s.frontendURL, token)
 	return s.sendEmail(to, subject, body)
 }
 
@@ -44,11 +46,11 @@ Hello %s,
 %s replied to your comment:
 "%s"
 
-View the conversation: http://localhost:3000/posts/%d
+View the conversation: %s/posts/%d
 
 ---
 You're receiving this because you have notifications enabled.
-`, username, commenter, content, postID)
+`, username, commenter, content, s.frontendURL, postID)
 
 	return s.sendEmail(to, subject, body)
 }

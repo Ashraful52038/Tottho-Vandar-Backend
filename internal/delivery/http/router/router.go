@@ -2,10 +2,8 @@ package router
 
 import (
 	"github.com/Ashraful52038/tottho-vandar-backend/internal/delivery/http/handler"
-	"github.com/Ashraful52038/tottho-vandar-backend/internal/delivery/http/middleware"
 	"github.com/Ashraful52038/tottho-vandar-backend/internal/pkg/jwt"
 	"github.com/labstack/echo/v4"
-	echomiddleware "github.com/labstack/echo/v4/middleware"
 )
 
 type Router struct {
@@ -18,6 +16,7 @@ type Router struct {
 	tagHandler     *handler.TagHandler
 	jwtService     *jwt.JWTService
 	uploadHandler  *handler.UploadHandler
+	allowedOrigins []string
 }
 
 func NewRouter(
@@ -30,6 +29,7 @@ func NewRouter(
 	feedHandler *handler.FeedHandler,
 	jwtService *jwt.JWTService,
 	uploadHandler *handler.UploadHandler,
+	allowedOrigins []string,
 ) *Router {
 	return &Router{
 		authHandler:    authHandler,
@@ -41,32 +41,12 @@ func NewRouter(
 		feedHandler:    feedHandler,
 		jwtService:     jwtService,
 		uploadHandler:  uploadHandler,
+		allowedOrigins: allowedOrigins,
 	}
 }
 
 func (r *Router) SetupRoutes(e *echo.Echo) {
-	// Middleware
-	e.Use(echomiddleware.Logger())
-	e.Use(echomiddleware.Recover())
-
-	e.Use(echomiddleware.CORSWithConfig(echomiddleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost:3000"},
-		AllowMethods: []string{echo.GET, echo.POST, echo.PUT, echo.DELETE, echo.OPTIONS},
-		AllowHeaders: []string{
-			echo.HeaderOrigin,
-			echo.HeaderContentType,
-			echo.HeaderAccept,
-			echo.HeaderAuthorization,
-			echo.HeaderAccessControlAllowHeaders,
-			echo.HeaderAccessControlAllowOrigin,
-		},
-		AllowCredentials: true,
-		MaxAge:           86400,
-	}))
-
-	e.Static("/uploads", "./uploads")
-
-	// Public routes
+	// Setup middleware and get groups
 	api := e.Group("/api")
 	{
 		// Auth routes

@@ -23,6 +23,17 @@
 - 📊 **Pagination**: Supported on all list endpoints (`page`, `limit`)
 - 🐳 **Docker**: Postgres + pgAdmin via `docker-compose`
 
+## 🚧 Upcoming Features (Roadmap)
+
+- 🏷️ **Tag Manager** – Admin panel to create, edit, delete tags; users can follow tags.
+- 👥 **Follow System** – Follow users and tags to get a personalized feed.
+- 📚 **Reading List / Saved Posts** – Save posts to read later, with a dedicated saved page.
+- 📝 **Draft Posts** – Save posts as drafts and publish them later.
+- 🕒 **Latest Posts** – Dedicated tab for newest posts first.
+- 🌟 **Featured Writers** – Show most followed or admin-selected writers in sidebar.
+- 🖼️ **Profile Image Upload** – Users can upload and crop their avatar.
+- 🔔 **Email Notifications** – Receive notifications for replies and follows (planned).
+
 ## 🏗️ Architecture
 
 ```

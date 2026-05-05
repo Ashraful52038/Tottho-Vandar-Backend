@@ -11,10 +11,14 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type UploadHandler struct{}
+type UploadHandler struct {
+	baseURL string
+}
 
-func NewUploadHandler() *UploadHandler {
-	return &UploadHandler{}
+func NewUploadHandler(baseURL string) *UploadHandler {
+	return &UploadHandler{
+		baseURL: baseURL,
+	}
 }
 
 func (h *UploadHandler) UploadImage(c echo.Context) error {
@@ -65,8 +69,7 @@ func (h *UploadHandler) UploadImage(c echo.Context) error {
 	}
 
 	// Return the URL
-	baseURL := "http://localhost:8080"
-	imageURL := fmt.Sprintf("%s/uploads/%s", baseURL, filename)
+	imageURL := fmt.Sprintf("%s/uploads/%s", h.baseURL, filename)
 	return c.JSON(http.StatusOK, map[string]string{
 		"url": imageURL,
 	})
