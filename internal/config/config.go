@@ -28,6 +28,7 @@ type Config struct {
 	// Email (Mailpit)
 	SMTPHost     string
 	SMTPPort     string
+	SMTPUser     string
 	SMTPUsername string
 	SMTPPassword string
 	EmailFrom    string
@@ -70,6 +71,7 @@ func New() *Config {
 		SMTPUsername: getEnv("SMTP_USERNAME", ""),
 		SMTPPassword: getEnv("SMTP_PASSWORD", ""),
 		EmailFrom:    getEnv("EMAIL_FROM", "noreply@totthovandar.com"),
+		SMTPUser:     getEnv("SMTP_USERNAME", ""),
 
 		// Frontend
 		FrontendURL: getEnv("FRONTEND_URL", "http://localhost:3000"),
