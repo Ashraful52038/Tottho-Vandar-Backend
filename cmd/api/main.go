@@ -93,6 +93,8 @@ func main() {
 	// Set custom validator
 	e.Validator = validator.NewCustomValidator()
 
+	e.GET("/ws", wsHandler.HandleWebSocket)
+
 	// Setup routes - Pass notifUsecase to handlers that need it
 	router := router.NewRouter(
 		authHandler,

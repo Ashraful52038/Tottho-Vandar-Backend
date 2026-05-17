@@ -5,6 +5,7 @@ import (
 	"github.com/Ashraful52038/tottho-vandar-backend/internal/delivery/http/middleware"
 	"github.com/Ashraful52038/tottho-vandar-backend/internal/pkg/jwt"
 	"github.com/labstack/echo/v4"
+	echomiddleware "github.com/labstack/echo/v4/middleware"
 )
 
 type Router struct {
@@ -47,6 +48,23 @@ func NewRouter(
 }
 
 func (r *Router) SetupRoutes(e *echo.Echo) {
+
+	// ✅ CORS middleware - প্রথমেই যোগ করো
+	e.Use(echomiddleware.CORSWithConfig(echomiddleware.CORSConfig{
+		AllowOrigins: r.allowedOrigins,
+		AllowMethods: []string{echo.GET, echo.POST, echo.PUT, echo.DELETE, echo.OPTIONS, echo.PATCH},
+		AllowHeaders: []string{
+			echo.HeaderOrigin,
+			echo.HeaderContentType,
+			echo.HeaderAccept,
+			echo.HeaderAuthorization,
+			"Content-Type",
+			"Authorization",
+		},
+		AllowCredentials: true,
+		MaxAge:           86400,
+	}))
+
 	// Setup middleware and get groups
 	api := e.Group("/api")
 	{
