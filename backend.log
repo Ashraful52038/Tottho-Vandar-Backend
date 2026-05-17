@@ -1,0 +1,14 @@
+2026/05/16 16:56:47 Database connected successfully
+2026/05/16 16:56:47 Server starting on port 8080
+2026/05/16 16:56:47 WebSocket endpoint: ws://localhost:8080/ws
+
+   ____    __
+  / __/___/ /  ___
+ / _// __/ _ \/ _ \
+/___/\__/_//_/\___/ v4.15.0
+High performance, minimalist Go web framework
+https://echo.labstack.com
+____________________________________O/_______
+                                    O\
+2026/05/16 16:56:47 Failed to start server:listen tcp :8080: bind: address already in use
+exit status 1

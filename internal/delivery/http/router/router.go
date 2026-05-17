@@ -2,6 +2,7 @@ package router
 
 import (
 	"github.com/Ashraful52038/tottho-vandar-backend/internal/delivery/http/handler"
+	"github.com/Ashraful52038/tottho-vandar-backend/internal/delivery/http/middleware"
 	"github.com/Ashraful52038/tottho-vandar-backend/internal/pkg/jwt"
 	"github.com/labstack/echo/v4"
 )
@@ -73,15 +74,16 @@ func (r *Router) SetupRoutes(e *echo.Echo) {
 		api.GET("/tags/popular", r.tagHandler.GetPopularTags)
 		api.GET("/tags/:id", r.tagHandler.GetTagByID)
 
-		// PUBLIC comment routes
+		// Public comment routes
 		api.GET("/comments/posts/:postId", r.commentHandler.GetByPost)
 
-		// PUBLIC like routes
+		// Public like routes
 		api.GET("/likes/posts/:postId", r.likeHandler.GetPostLikes)
 		api.GET("/likes/comments/:commentId", r.likeHandler.GetCommentLikes)
 
 		// Public user routes
 		api.GET("/users/most-followed", r.userHandler.GetMostFollowedUsers)
+		api.GET("/users/:userId", r.userHandler.GetUserProfile)
 
 		// Protected routes
 		protected := api.Group("")
@@ -128,7 +130,7 @@ func (r *Router) SetupRoutes(e *echo.Echo) {
 				like.POST("/comments/:commentId", r.likeHandler.ToggleComment)
 			}
 
-			//Feed Routes (Protected)
+			// Feed Routes (Protected)
 			feed := protected.Group("/feed")
 			{
 				feed.GET("", r.feedHandler.GetPersonalizedFeed)
@@ -144,9 +146,9 @@ func (r *Router) SetupRoutes(e *echo.Echo) {
 				upload.POST("/avatar", r.userHandler.UploadAvatar)
 			}
 
+			// User profile routes
 			userProfile := protected.Group("/users")
 			{
-				userProfile.GET("/:userId", r.userHandler.GetUserProfile)
 				userProfile.GET("/:userId/profile", r.userHandler.GetUserProfile)
 				userProfile.GET("/:userId/posts", r.userHandler.GetUserPosts)
 				userProfile.GET("/:userId/comments", r.userHandler.GetUserComments)
@@ -158,7 +160,16 @@ func (r *Router) SetupRoutes(e *echo.Echo) {
 				userProfile.DELETE("/:userId/follow", r.userHandler.UnfollowUser)
 			}
 
+			// Change password
 			protected.POST("/auth/change-password", r.authHandler.ChangePassword)
 		}
 	}
+
+	// Health check endpoint
+	e.GET("/health", func(c echo.Context) error {
+		return c.JSON(200, map[string]string{
+			"status":    "ok",
+			"websocket": "enabled",
+		})
+	})
 }

@@ -1,20 +1,36 @@
 package handler
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/Ashraful52038/tottho-vandar-backend/internal/usecase"
+	notificationUsecase "github.com/Ashraful52038/tottho-vandar-backend/internal/usecase/notification"
 	"github.com/labstack/echo/v4"
 )
 
 type CommentHandler struct {
 	commentUsecase usecase.CommentUsecase
 	likeUsecase    usecase.LikeUsecase
+	postUsecase    usecase.PostUsecase // ✅ Add this
+	userUsecase    usecase.UserUsecase // ✅ Add this
+	notifUsecase   *notificationUsecase.NotificationUsecase
 }
 
-func NewCommentHandler(commentUsecase usecase.CommentUsecase, likeUsecase usecase.LikeUsecase) *CommentHandler {
-	return &CommentHandler{commentUsecase: commentUsecase, likeUsecase: likeUsecase}
+func NewCommentHandler(
+	commentUsecase usecase.CommentUsecase,
+	likeUsecase usecase.LikeUsecase,
+	postUsecase usecase.PostUsecase, // ✅ Add this
+	userUsecase usecase.UserUsecase, // ✅ Add this
+	notifUsecase *notificationUsecase.NotificationUsecase) *CommentHandler {
+	return &CommentHandler{
+		commentUsecase: commentUsecase,
+		likeUsecase:    likeUsecase,
+		postUsecase:    postUsecase, // ✅ Add this
+		userUsecase:    userUsecase, // ✅ Add this
+		notifUsecase:   notifUsecase,
+	}
 }
 
 func (h *CommentHandler) Create(c echo.Context) error {
@@ -34,6 +50,44 @@ func (h *CommentHandler) Create(c echo.Context) error {
 	comment, err := h.commentUsecase.Create(c.Request().Context(), userID, uint(postID), req.Content)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	// ✅ DEBUG LOG 1
+	log.Printf("🔍 [COMMENT DEBUG] Comment created: userID=%d, postID=%d, notifUsecase=%v",
+		userID, postID, h.notifUsecase != nil)
+
+	if comment != nil && h.notifUsecase != nil {
+		// Get post to find author
+		post, err := h.postUsecase.GetByID(c.Request().Context(), uint(postID))
+
+		// ✅ DEBUG LOG 2
+		log.Printf("🔍 [COMMENT DEBUG] Post found: err=%v, post=%v, post.AuthorID=%d, userID=%d",
+			err, post != nil, func() uint {
+				if post != nil {
+					return post.AuthorID
+				}
+				return 0
+			}(), userID)
+
+		if err == nil && post != nil && post.AuthorID != userID {
+			// Get commenter info
+			currentUser, err := h.userUsecase.GetByID(c.Request().Context(), userID)
+			userName := "Someone"
+			if err == nil && currentUser != nil {
+				userName = currentUser.Name
+			}
+
+			// ✅ DEBUG LOG 3
+			log.Printf("🔔 [COMMENT TRIGGER] Sending notification: author=%d, commenter=%s, post=%d",
+				post.AuthorID, userName, postID)
+
+			// Send notification to post author
+			h.notifUsecase.NotifyNewComment(post.AuthorID, uint(postID), userName, req.Content)
+		} else {
+			// ✅ DEBUG LOG 4 - কেন notification send হচ্ছে না
+			log.Printf("⚠️ [COMMENT SKIP] Reason: err=%v, postNil=%v, sameUser=%v",
+				err, post == nil, post != nil && post.AuthorID == userID)
+		}
 	}
 
 	return c.JSON(http.StatusCreated, comment)

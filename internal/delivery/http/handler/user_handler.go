@@ -10,19 +10,30 @@ import (
 	"time"
 
 	"github.com/Ashraful52038/tottho-vandar-backend/internal/domain"
+	"github.com/Ashraful52038/tottho-vandar-backend/internal/pkg/email"
 	"github.com/Ashraful52038/tottho-vandar-backend/internal/usecase"
+	notificationUsecase "github.com/Ashraful52038/tottho-vandar-backend/internal/usecase/notification"
 	"github.com/labstack/echo/v4"
 )
 
 type UserHandler struct {
-	userUsecase usecase.UserUsecase
-	likeUsecase usecase.LikeUsecase
+	userUsecase  usecase.UserUsecase
+	likeUsecase  usecase.LikeUsecase
+	notifUsecase *notificationUsecase.NotificationUsecase
+	emailSender  *email.MailpitSender
 }
 
-func NewUserHandler(userUsecase usecase.UserUsecase, likeUsecase usecase.LikeUsecase) *UserHandler {
+func NewUserHandler(
+	userUsecase usecase.UserUsecase,
+	likeUsecase usecase.LikeUsecase,
+	notifUsecase *notificationUsecase.NotificationUsecase,
+	emailSender *email.MailpitSender,
+) *UserHandler {
 	return &UserHandler{
-		userUsecase: userUsecase,
-		likeUsecase: likeUsecase,
+		userUsecase:  userUsecase,
+		likeUsecase:  likeUsecase,
+		notifUsecase: notifUsecase,
+		emailSender:  emailSender,
 	}
 }
 
@@ -249,7 +260,6 @@ func (h *UserHandler) GetUserLikes(c echo.Context) error {
 }
 
 func (h *UserHandler) GetUserFollowers(c echo.Context) error {
-
 	_, err := h.validateAndGetUser(c)
 	if err != nil {
 		return err
@@ -305,7 +315,6 @@ func (h *UserHandler) GetUserFollowing(c echo.Context) error {
 		limit = 20
 	}
 
-	// current user ID
 	currentUserID, ok := c.Get("userID").(uint)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, map[string]interface{}{
@@ -331,7 +340,6 @@ func (h *UserHandler) GetUserFollowing(c echo.Context) error {
 func (h *UserHandler) GetFollowStatus(c echo.Context) error {
 	userId := c.Param("userId")
 
-	//Take current Id from JWT
 	currentUserID, ok := c.Get("userID").(uint)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, map[string]interface{}{
@@ -380,6 +388,17 @@ func (h *UserHandler) FollowUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{
 			"error": err.Error(),
 		})
+	}
+
+	// Send notification
+	if h.notifUsecase != nil {
+		currentUser, _ := h.userUsecase.GetByID(c.Request().Context(), currentUserID)
+		userName := "Someone"
+		if currentUser != nil {
+			userName = currentUser.Name
+		}
+		// Pass uint value directly
+		h.notifUsecase.NotifyNewFollow(uint(targetUserID), userName)
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
@@ -440,7 +459,6 @@ func (h *UserHandler) GetMostFollowedUsers(c echo.Context) error {
 
 // UploadAvatar handles avatar image upload
 func (h *UserHandler) UploadAvatar(c echo.Context) error {
-	// Get user ID from context (JWT middleware থেকে আসবে)
 	userID, ok := c.Get("userID").(uint)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, map[string]interface{}{
@@ -448,7 +466,6 @@ func (h *UserHandler) UploadAvatar(c echo.Context) error {
 		})
 	}
 
-	// Get file from request
 	file, err := c.FormFile("avatar")
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{
@@ -456,14 +473,12 @@ func (h *UserHandler) UploadAvatar(c echo.Context) error {
 		})
 	}
 
-	// Check file size (max 5MB)
 	if file.Size > 5*1024*1024 {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{
 			"error": "File too large. Maximum size is 5MB",
 		})
 	}
 
-	// Check file type
 	fileType := file.Header.Get("Content-Type")
 	if fileType != "image/jpeg" && fileType != "image/png" && fileType != "image/jpg" && fileType != "image/webp" {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{
@@ -471,7 +486,6 @@ func (h *UserHandler) UploadAvatar(c echo.Context) error {
 		})
 	}
 
-	// Open file
 	src, err := file.Open()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
@@ -480,11 +494,9 @@ func (h *UserHandler) UploadAvatar(c echo.Context) error {
 	}
 	defer src.Close()
 
-	// Create unique filename
 	timestamp := time.Now().Unix()
 	filename := fmt.Sprintf("avatar_%d_%s", timestamp, file.Filename)
 
-	// Create directory if not exists
 	uploadDir := "uploads/avatars"
 	if err := os.MkdirAll(uploadDir, os.ModePerm); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
@@ -492,7 +504,6 @@ func (h *UserHandler) UploadAvatar(c echo.Context) error {
 		})
 	}
 
-	// Create destination file
 	filePath := filepath.Join(uploadDir, filename)
 	dst, err := os.Create(filePath)
 	if err != nil {
@@ -502,17 +513,14 @@ func (h *UserHandler) UploadAvatar(c echo.Context) error {
 	}
 	defer dst.Close()
 
-	// Copy file
 	if _, err = io.Copy(dst, src); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
 			"error": "Failed to save file",
 		})
 	}
 
-	// Generate avatar URL
 	avatarURL := fmt.Sprintf("/uploads/avatars/%s", filename)
 
-	// Update user in database using userUsecase
 	updateReq := &domain.UpdateUserRequest{
 		Avatar: &avatarURL,
 	}
