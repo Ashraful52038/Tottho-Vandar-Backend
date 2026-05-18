@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -390,15 +391,44 @@ func (h *UserHandler) FollowUser(c echo.Context) error {
 		})
 	}
 
-	// Send notification
+	// Send WebSocket notification
 	if h.notifUsecase != nil {
 		currentUser, _ := h.userUsecase.GetByID(c.Request().Context(), currentUserID)
 		userName := "Someone"
 		if currentUser != nil {
 			userName = currentUser.Name
 		}
-		// Pass uint value directly
 		h.notifUsecase.NotifyNewFollow(uint(targetUserID), userName)
+	}
+
+	// ✅ Email notification for follow
+	if h.emailSender != nil {
+		followedUser, err := h.userUsecase.GetByID(c.Request().Context(), uint(targetUserID))
+		if err == nil && followedUser != nil && followedUser.Email != "" {
+			currentUser, _ := h.userUsecase.GetByID(c.Request().Context(), currentUserID)
+			followerName := "Someone"
+			if currentUser != nil {
+				followerName = currentUser.Name
+			}
+
+			profileURL := fmt.Sprintf("http://localhost:3000/profile/%d", currentUserID)
+
+			emailBody := fmt.Sprintf(email.FollowEmailTemplate,
+				followerName,      // %s - follower name
+				followedUser.Name, // %s - followed user name
+				profileURL,        // %s - profile URL
+				followerName,      // %s - follower name for footer
+			)
+
+			go func() {
+				subject := fmt.Sprintf("👤 %s started following you", followerName)
+				if err := h.emailSender.SendEmail(followedUser.Email, subject, emailBody); err != nil {
+					log.Printf("❌ [EMAIL FAILED] Follow email: %v", err)
+				} else {
+					log.Printf("✅ [EMAIL SUCCESS] Follow email sent to %s", followedUser.Email)
+				}
+			}()
+		}
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{

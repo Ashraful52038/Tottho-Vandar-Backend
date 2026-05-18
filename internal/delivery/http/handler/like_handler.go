@@ -72,8 +72,6 @@ func (h *LikeHandler) TogglePost(c echo.Context) error {
 		// WebSocket notification
 		h.notifUsecase.NotifyNewLike(post.AuthorID, uint(postID), likerName)
 
-		// Like handler এর TogglePost ফাংশনে, notification এর পর এই কোড যোগ করো:
-
 		// ✅ ইমেইল সেন্ড করার আগে লগ
 		log.Printf("📧 [EMAIL CHECK] emailSender=%v, post.AuthorID=%d", h.emailSender != nil, post.AuthorID)
 
@@ -87,27 +85,35 @@ func (h *LikeHandler) TogglePost(c echo.Context) error {
 			}())
 
 			if author != nil && author.Email != "" {
-				liker, _ := h.userUsecase.GetByID(c.Request().Context(), userID)
-				likerName := "Someone"
-				if liker != nil {
-					likerName = liker.Name
-				}
+				// ✅ postURL ডিক্লেয়ার করো
+				postURL := fmt.Sprintf("http://localhost:3000/posts/%d", post.ID)
 
 				log.Printf("📧 [EMAIL SENDING] to=%s, subject=❤️ %s liked your post", author.Email, likerName)
 
-				go func() {
-					subject := fmt.Sprintf("❤️ %s liked your post", likerName)
-					body := fmt.Sprintf(`
-                <h2>New Like on Your Post</h2>
-                <p><strong>%s</strong> liked your post "<strong>%s</strong>"</p>
-                <a href="http://localhost:3000/posts/%d">View Post</a>
-            `, likerName, post.Title, post.ID)
+				// ✅ Get post excerpt
+				excerpt := post.Content
+				if len(excerpt) > 120 {
+					excerpt = excerpt[:120] + "..."
+				}
 
-					err := h.emailSender.SendEmail(author.Email, subject, body)
+				// ✅ Beautiful HTML email body using template
+				emailBody := fmt.Sprintf(email.LikeEmailTemplate,
+					likerName,     // %s - liker name
+					post.Title,    // %s - post title
+					excerpt,       // %s - excerpt
+					post.Likes+1,  // %d - total likes
+					post.Comments, // %d - comments count
+					postURL,       // %s - post URL
+					likerName,     // %s - liker name (for footer)
+				)
+
+				go func() {
+					subject := fmt.Sprintf("❤️ %s liked your post \"%s\"", likerName, post.Title)
+					err := h.emailSender.SendEmail(author.Email, subject, emailBody)
 					if err != nil {
 						log.Printf("❌ [EMAIL FAILED] %v", err)
 					} else {
-						log.Printf("✅ [EMAIL SUCCESS] Sent to %s", author.Email)
+						log.Printf("✅ [EMAIL SUCCESS] Beautiful email sent to %s", author.Email)
 					}
 				}()
 			} else {
