@@ -78,7 +78,7 @@ func main() {
 	authHandler := handler.NewAuthHandler(authUsecase)
 	userHandler := handler.NewUserHandler(userUsecase, likeUsecase, notifUsecase, emailSender)
 	postHandler := handler.NewPostHandler(postUsecase)
-	commentHandler := handler.NewCommentHandler(commentUsecase, likeUsecase, postUsecase, userUsecase, notifUsecase)
+	commentHandler := handler.NewCommentHandler(commentUsecase, likeUsecase, postUsecase, userUsecase, notifUsecase, emailSender)
 	likeHandler := handler.NewLikeHandler(likeUsecase, postUsecase, commentUsecase, userUsecase, notifUsecase, emailSender)
 	tagHandler := handler.NewTagHandler(tagUsecase)
 	feedHandler := handler.NewFeedHandler(postUsecase)

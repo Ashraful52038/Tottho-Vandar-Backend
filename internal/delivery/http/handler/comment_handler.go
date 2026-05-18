@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 
+	"github.com/Ashraful52038/tottho-vandar-backend/internal/pkg/email"
 	"github.com/Ashraful52038/tottho-vandar-backend/internal/usecase"
 	notificationUsecase "github.com/Ashraful52038/tottho-vandar-backend/internal/usecase/notification"
 	"github.com/labstack/echo/v4"
@@ -13,23 +15,26 @@ import (
 type CommentHandler struct {
 	commentUsecase usecase.CommentUsecase
 	likeUsecase    usecase.LikeUsecase
-	postUsecase    usecase.PostUsecase // ✅ Add this
-	userUsecase    usecase.UserUsecase // ✅ Add this
+	postUsecase    usecase.PostUsecase
+	userUsecase    usecase.UserUsecase
 	notifUsecase   *notificationUsecase.NotificationUsecase
+	emailSender    *email.MailpitSender
 }
 
 func NewCommentHandler(
 	commentUsecase usecase.CommentUsecase,
 	likeUsecase usecase.LikeUsecase,
-	postUsecase usecase.PostUsecase, // ✅ Add this
-	userUsecase usecase.UserUsecase, // ✅ Add this
-	notifUsecase *notificationUsecase.NotificationUsecase) *CommentHandler {
+	postUsecase usecase.PostUsecase,
+	userUsecase usecase.UserUsecase,
+	notifUsecase *notificationUsecase.NotificationUsecase,
+	emailSender *email.MailpitSender) *CommentHandler {
 	return &CommentHandler{
 		commentUsecase: commentUsecase,
 		likeUsecase:    likeUsecase,
-		postUsecase:    postUsecase, // ✅ Add this
-		userUsecase:    userUsecase, // ✅ Add this
+		postUsecase:    postUsecase,
+		userUsecase:    userUsecase,
 		notifUsecase:   notifUsecase,
+		emailSender:    emailSender,
 	}
 }
 
@@ -83,6 +88,39 @@ func (h *CommentHandler) Create(c echo.Context) error {
 
 			// Send notification to post author
 			h.notifUsecase.NotifyNewComment(post.AuthorID, uint(postID), userName, req.Content)
+
+			// ✅ Email notification
+			if h.emailSender != nil {
+				author, err := h.userUsecase.GetByID(c.Request().Context(), post.AuthorID)
+				if err == nil && author != nil && author.Email != "" {
+					postURL := fmt.Sprintf("http://localhost:3000/posts/%d", post.ID)
+
+					// Get comment excerpt
+					commentExcerpt := req.Content
+					if len(commentExcerpt) > 100 {
+						commentExcerpt = commentExcerpt[:100] + "..."
+					}
+
+					emailBody := fmt.Sprintf(email.CommentEmailTemplate,
+						userName,        // %s - commenter name
+						post.Title,      // %s - post title
+						commentExcerpt,  // %s - comment excerpt
+						post.Comments+1, // %d - total comments
+						post.Likes,      // %d - total likes
+						postURL,         // %s - post URL
+						userName,        // %s - commenter name for footer
+					)
+
+					go func() {
+						subject := fmt.Sprintf("💬 %s commented on your post \"%s\"", userName, post.Title)
+						if err := h.emailSender.SendEmail(author.Email, subject, emailBody); err != nil {
+							log.Printf("❌ [EMAIL FAILED] Comment email: %v", err)
+						} else {
+							log.Printf("✅ [EMAIL SUCCESS] Comment email sent to %s", author.Email)
+						}
+					}()
+				}
+			}
 		} else {
 			// ✅ DEBUG LOG 4 - কেন notification send হচ্ছে না
 			log.Printf("⚠️ [COMMENT SKIP] Reason: err=%v, postNil=%v, sameUser=%v",
