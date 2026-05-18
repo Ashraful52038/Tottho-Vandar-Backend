@@ -49,6 +49,8 @@ func NewRouter(
 
 func (r *Router) SetupRoutes(e *echo.Echo) {
 
+	e.Static("/uploads", "./uploads")
+
 	// ✅ CORS middleware - প্রথমেই যোগ করো
 	e.Use(echomiddleware.CORSWithConfig(echomiddleware.CORSConfig{
 		AllowOrigins: r.allowedOrigins,
