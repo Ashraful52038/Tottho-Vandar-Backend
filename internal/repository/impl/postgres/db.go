@@ -29,6 +29,7 @@ func NewDB(cfg *config.Config) (*gorm.DB, error) {
 		&domain.Tag{},
 		&domain.PostTag{},
 		&domain.Follow{},
+		&domain.Notification{},
 	)
 	if err != nil {
 		return nil, err

@@ -35,6 +35,8 @@ func main() {
 	tagRepo := postgres.NewTagRepository(db)
 	feedRepo := postRepo
 	followRepo := postgres.NewFollowRepository(db)
+	// main.go তে, repositories সেকশনের পরে notificationRepo যোগ করো
+	notificationRepo := postgres.NewNotificationRepository(db)
 
 	// Initialize services
 	jwtService := jwt.NewJWTService(cfg.JWTSecret, time.Hour*24)
@@ -72,7 +74,7 @@ func main() {
 	go wsHub.Run()
 
 	// Initialize Notification Usecase
-	notifUsecase := notificationUsecase.NewNotificationUsecase(wsHub)
+	notifUsecase := notificationUsecase.NewNotificationUsecase(wsHub, notificationRepo)
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(authUsecase)
@@ -83,6 +85,8 @@ func main() {
 	tagHandler := handler.NewTagHandler(tagUsecase)
 	feedHandler := handler.NewFeedHandler(postUsecase)
 	uploadHandler := handler.NewUploadHandler(cfg.BackendURL)
+	// handlers সেকশনে notificationHandler যোগ করো
+	notificationHandler := handler.NewNotificationHandler(notifUsecase, notificationRepo)
 
 	// Initialize WebSocket Handler
 	wsHandler := websocket.NewWebSocketHandler(wsHub)
@@ -108,6 +112,7 @@ func main() {
 		feedHandler,
 		jwtService,
 		uploadHandler,
+		notificationHandler,
 		[]string{cfg.FrontendURL},
 	)
 

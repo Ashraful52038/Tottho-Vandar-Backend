@@ -8,18 +8,38 @@ import (
 
 	"github.com/Ashraful52038/tottho-vandar-backend/internal/delivery/websocket"
 	"github.com/Ashraful52038/tottho-vandar-backend/internal/domain"
+	"github.com/Ashraful52038/tottho-vandar-backend/internal/repository"
 )
 
 type NotificationUsecase struct {
-	wsHub *websocket.Hub
+	wsHub            *websocket.Hub
+	notificationRepo repository.NotificationRepository
 }
 
-func NewNotificationUsecase(hub *websocket.Hub) *NotificationUsecase {
-	return &NotificationUsecase{wsHub: hub}
+func NewNotificationUsecase(hub *websocket.Hub, notificationRepo repository.NotificationRepository) *NotificationUsecase {
+	return &NotificationUsecase{wsHub: hub, notificationRepo: notificationRepo}
 }
 
 func (n *NotificationUsecase) SendNotification(userID string, title, message string, eventType domain.WebSocketEventType, data interface{}) {
 	log.Printf("🔔 [SEND] userID=%s, title=%s", userID, title)
+
+	if n.notificationRepo != nil {
+		userIDUint, err := strconv.ParseUint(userID, 10, 64)
+		if err == nil {
+			notif := &domain.Notification{
+				UserID:  uint(userIDUint),
+				Type:    domain.NotificationType(eventType),
+				Subject: title,
+				Content: message,
+				IsRead:  false,
+			}
+			if err := n.notificationRepo.Create(nil, notif); err != nil {
+				log.Printf("❌ DB save failed: %v", err)
+			} else {
+				log.Printf("✅ Notification saved to DB for user: %s", userID)
+			}
+		}
+	}
 
 	notification := domain.WebSocketMessage{
 		Type:      eventType,

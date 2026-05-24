@@ -9,16 +9,17 @@ import (
 )
 
 type Router struct {
-	authHandler    *handler.AuthHandler
-	userHandler    *handler.UserHandler
-	postHandler    *handler.PostHandler
-	commentHandler *handler.CommentHandler
-	likeHandler    *handler.LikeHandler
-	feedHandler    *handler.FeedHandler
-	tagHandler     *handler.TagHandler
-	jwtService     *jwt.JWTService
-	uploadHandler  *handler.UploadHandler
-	allowedOrigins []string
+	authHandler         *handler.AuthHandler
+	userHandler         *handler.UserHandler
+	postHandler         *handler.PostHandler
+	commentHandler      *handler.CommentHandler
+	likeHandler         *handler.LikeHandler
+	feedHandler         *handler.FeedHandler
+	tagHandler          *handler.TagHandler
+	jwtService          *jwt.JWTService
+	uploadHandler       *handler.UploadHandler
+	notificationHandler *handler.NotificationHandler
+	allowedOrigins      []string
 }
 
 func NewRouter(
@@ -31,19 +32,21 @@ func NewRouter(
 	feedHandler *handler.FeedHandler,
 	jwtService *jwt.JWTService,
 	uploadHandler *handler.UploadHandler,
+	notificationHandler *handler.NotificationHandler,
 	allowedOrigins []string,
 ) *Router {
 	return &Router{
-		authHandler:    authHandler,
-		userHandler:    userHandler,
-		postHandler:    postHandler,
-		commentHandler: commentHandler,
-		likeHandler:    likeHandler,
-		tagHandler:     tagHandler,
-		feedHandler:    feedHandler,
-		jwtService:     jwtService,
-		uploadHandler:  uploadHandler,
-		allowedOrigins: allowedOrigins,
+		authHandler:         authHandler,
+		userHandler:         userHandler,
+		postHandler:         postHandler,
+		commentHandler:      commentHandler,
+		likeHandler:         likeHandler,
+		tagHandler:          tagHandler,
+		feedHandler:         feedHandler,
+		jwtService:          jwtService,
+		uploadHandler:       uploadHandler,
+		notificationHandler: notificationHandler,
+		allowedOrigins:      allowedOrigins,
 	}
 }
 
@@ -182,6 +185,15 @@ func (r *Router) SetupRoutes(e *echo.Echo) {
 
 			// Change password
 			protected.POST("/auth/change-password", r.authHandler.ChangePassword)
+
+			notification := protected.Group("/notifications")
+			{
+				notification.GET("", r.notificationHandler.GetMyNotifications)
+				notification.GET("/unread", r.notificationHandler.GetUnreadCount)
+				notification.PUT("/:id/read", r.notificationHandler.MarkAsRead)
+				notification.PUT("/read-all", r.notificationHandler.MarkAllAsRead)
+				notification.DELETE("/:id", r.notificationHandler.DeleteNotification)
+			}
 		}
 	}
 
